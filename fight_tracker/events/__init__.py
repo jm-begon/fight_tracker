@@ -1,0 +1,1 @@
+from .attacks import Damaged, Healed
