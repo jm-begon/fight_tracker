@@ -1,3 +1,6 @@
+from datetime import time, datetime
+
+
 class Observable(object):
     def __init__(self):
         self.observers = set()
@@ -8,10 +11,6 @@ class Observable(object):
     def notify(self, event):
         for observer in self.observers:
             observer.update(event)
-
-    def notify_trigger(self, event):
-        self.notify(event)
-        event()
 
 
 class ObserverMixin(object):
@@ -25,23 +24,27 @@ class CircularQueue(object):
         self.head = 0
         self.priority_fn = priority_fn
 
-    def peek(self):
+    def peek(self, plus=0):
         if len(self.queue) == 0:
             return None
-        return self.queue[self.head]
+        index = (self.head + plus) % len(self.queue)
+        return self.queue[index]
 
     def next(self):
         self.head = (self.head + 1) % len(self.queue)
 
     def __call__(self, *args, **kwargs):
-        current = self.peek()
         self.next()
+        current = self.peek()
         return current
 
     def __iter__(self):
         limit = len(self.queue)
         for i in range(limit):
             yield self()
+
+    def list_in_order(self):
+        return iter(self.queue)
 
     def __len__(self):
         return len(self.queue)
@@ -57,7 +60,37 @@ class CircularQueue(object):
                 break
 
     def reset_head(self):
-        self.head = 0
+        self.head = len(self.queue) - 1
 
     def is_first(self):
         return self.head == 0
+
+
+class Clock(object):
+    def __init__(self):
+        self.records = []
+
+    def new_laps(self, event):
+        self.records.append((datetime.now(), event))
+        return self
+
+    def start(self, event):
+        return self.new_laps(event)
+
+    def end(self, event):
+        return self.new_laps(event)
+
+    def __iter__(self):
+        if len(self.records) == 0:
+            raise StopIteration()
+        start, curr_event = self.records[0]
+        for end, next_event in self.records[1:]:
+            delta = end - start
+            yield delta, curr_event
+            curr_event = next_event
+
+    def total_duration(self):
+        if len(self.records) < 2:
+            return None
+        return self.records[-1][0] - self.records[0][0]
+

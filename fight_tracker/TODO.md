@@ -6,6 +6,7 @@ TODO
 - [ ] Tag logic + Help
 - [ ] Dice logic
 - [ ] Timers
+- [ ] Concentration
 - [ ] Damage types
 - [ ] Conditions + can act
 - [ ] Narrator vs. logger

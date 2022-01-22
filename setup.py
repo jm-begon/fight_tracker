@@ -36,6 +36,8 @@ if __name__ == '__main__':
           classifiers=CLASSIFIERS,
           platforms='any',
           install_requires=[],
-          packages=['fight_tracker', "fight_tracker/events"],
+          packages=['fight_tracker', "fight_tracker/events",
+                    "fight_tracker/stream_renderer", "fight_tracker/rendering",
+                    "fight_tracker/bestiary"],
           )
 

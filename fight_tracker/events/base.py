@@ -2,6 +2,7 @@
 #       - Events are not callable
 #       - Delayed Events are lazy
 
+
 class Event(object):
     def __repr__(self):
         return "{cls}()".format(cls=self.__class__.__name__)
@@ -9,35 +10,36 @@ class Event(object):
     def __str__(self):
         return repr(self)
 
-    def __call__(self, *args, **kwargs):
-        return self
-
-    def undo(self):
-        pass
-
-
-class Trigger(object):
-    def __rshift__(self, other):
-        # quick and dirty
-        if isinstance(other, Event):
-            other()
-        return other
-
-
-class NoOp(Event):
-    def __init__(self, message=None):
-        self.message = message
-
-    def __str__(self):
-        return "nothing happens" if self.message is None else str(self.message)
-
 
 class MessageEvent(Event):
     def __init__(self, message):
         self.message = message
 
+    def __repr__(self):
+        return "{cls}({msg})".format(cls=self.__class__.__name__,
+                                     msg=repr(self.message))
+
     def __str__(self):
         return str(self.message)
+
+
+# class DelayedEvent(Event):
+#     def __init__(self, event):
+#         self.decorated = event
+#
+#     def __call__(self, *args, **kwargs):
+#         pass
+#
+#
+# class Trigger(object):
+#     def __rshift__(self, other):
+#         # quick and dirty
+#         if isinstance(other, Event):
+#             other()
+#         return other
+
+
+
 
 
 class CallbackEvent(MessageEvent):
