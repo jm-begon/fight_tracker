@@ -12,7 +12,7 @@ class Narrator(Logger):
     def log(self, event):
         super(Narrator, self).log(event)
         self.renderer(event)
-        # TODO clock rounds
+        # TODO clock rounds by encounters
         self.history.append(event)
 
 

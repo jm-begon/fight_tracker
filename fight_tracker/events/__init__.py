@@ -1,1 +1,1 @@
-from .attacks import Damaged, Healed
+from .creature import Damaged, Healed

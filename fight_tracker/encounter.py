@@ -1,7 +1,8 @@
 from .dice import RNG
 from .events.base import MessageEvent
+from .events.encounter import NewRound, TurnEvent, EncounterStart, EncounterEnd
 from .rendering.table import Table, BoolCell
-from .util import CircularQueue
+from .util import CircularQueue, Observable
 
 
 class Participant(object):
@@ -26,13 +27,12 @@ class Participant(object):
         return not self.creature.is_ko
 
 
-class Encounter(object):
-    def __init__(self, logger):
+class Encounter(Observable):
+    def __init__(self):
         super().__init__()
         self.round = 0
         self.turn = 0
         self.queue = CircularQueue((lambda p: p.initiative))
-        self.logger = logger
 
     def __repr__(self):
         return "{}()".format(self.__class__.__name__)
@@ -40,8 +40,6 @@ class Encounter(object):
     def add(self, creature, initiative=None):
         if initiative is None:
             initiative = 10  # TODO
-
-        creature.add_observer(self.logger)
 
         initiative = int(initiative)  # for rolls
         participant = Participant(creature, self, initiative)
@@ -52,9 +50,6 @@ class Encounter(object):
         # Careful, actual moves the queue
         for p in self.queue:
             yield p
-
-    def log_message(self, message):
-        self.logger.log(MessageEvent(message))  # TODO class ? (for isinstance)
 
     def get_next_participant(self):
         next_participant = None
@@ -69,33 +64,32 @@ class Encounter(object):
     def next_turn(self):
         participant = self.queue()
         self.turn += 1
+        turn_event = TurnEvent(participant, self)
+
         if self.queue.is_first():
             self.round += 1
             self.turn = 0
-            self.log_message("Start round {}".format(self.round))
+            NewRound(self.round, self).notify()
 
         if participant.can_act():
             next_participant = self.get_next_participant()
-            next_str = ""
             if next_participant is not None:
-                next_str = " (next in line is {})".format(next_participant.name)
-            self.log_message("{} is ready to play{}".format(participant.name, next_str))
-
+                turn_event.add_next(next_participant).notify()
             return participant.creature
 
         else:
-            self.log_message("{} cannot play".format(participant.name))
+            turn_event.disable().notify()
             return self.next_turn()
 
     def start(self):
-        self.log_message("Battle begins!")
+        EncounterStart(self).notify()
         self.queue.reset_head()
         return self.next_turn()
 
     def end(self):
-        self.log_message("Battle is over")
+        EncounterEnd(self).notify()
 
-    def __render__(self, renderer):
+    def __render__(self):
         curr = self.queue.head
         table = Table(header=True)
         table.fill_row("Curr.", "Init.", "Participant", "AC", "HP/HP max")
@@ -114,7 +108,7 @@ class Encounter(object):
 
         table.delete_row()
 
-        renderer(table)
+        return table
 
 
 

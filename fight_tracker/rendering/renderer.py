@@ -1,6 +1,6 @@
-from fight_tracker.creature import HpBox
-from fight_tracker.events.base import Event
-from fight_tracker.rendering.table import Table, BoolCell
+from ..creature import HpBox
+from ..events.base import Event
+from .table import Table, BoolCell
 
 
 class Renderer(object):
@@ -17,10 +17,19 @@ class Renderer(object):
         return str(s)
 
     def r_event(self, event):
-        return str(event)
+        ls = [self.dispatch(e) for e in event]
+        return self.concat([str(event), self.concat(ls)])
+
+    def concat(self, iterable):
+        return " ".join(iterable)
 
     def dispatch(self, obj):
-        if isinstance(obj, Table):
+        if hasattr(obj, "__render__"):
+            return self.dispatch(obj.__render__())
+        elif isinstance(obj, list) or isinstance(obj, tuple):
+            # iterable would be too generic
+            return self.concat([self.dispatch(obj_i) for obj_i in obj])
+        elif isinstance(obj, Table):
             return self.r_table(obj)
         elif isinstance(obj, BoolCell):
             return self.r_bool_cell(obj)
@@ -28,8 +37,6 @@ class Renderer(object):
             return self.r_pv_box(obj)
         elif isinstance(obj, Event):
             return self.r_event(obj)
-        elif hasattr(obj, "__render__"):
-            return self.dispatch(obj.__render__(self))
         else:
             return self.r_str(obj)
 
