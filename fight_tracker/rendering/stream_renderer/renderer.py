@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 
 from .util import get_stream
 from ..renderer import Renderer
@@ -41,20 +42,32 @@ class StreamRenderer(Renderer):
 
     def r_table(self, table):
         content = []
-        for row in table:
+        col_len = defaultdict(int)
+        for i, row in enumerate(table):
             str_row = []
-            for cell in row:
-                str_row.append(self.dispatch(cell))
+            for j, cell in enumerate(row):
+                content_str = self.dispatch(cell)
+                str_row.append(content_str)
+                col_len[j] = max(col_len[j], len(content_str))
             content.append(str_row)
 
         # TODO nice formatting (header, column, size, etc.)
-        content_str = []
-        for i, row in enumerate(content):
-            if table.first_row_header and (i == 0 or i == 1):
-                content_str.append("-"*80)
-            content_str.append(" ".join(row))
 
-        content_str.append("-"*80)
+        content_str = []
+        sep = " | "
+        headline = "+-" + "-+-".join(["-"*col_len[l] for l in range(len(col_len))]) + "-+"
+
+        content_str.append("/" + headline[1:])
+        for i, row in enumerate(content):
+            tmp = []
+            for j, col_content in enumerate(row):
+                s = col_content.ljust(col_len[j])
+                tmp.append(s)
+            content_str.append("| " + sep.join(tmp) + " |")
+            if table.first_row_header and i == 0:
+                content_str.append(headline)
+
+        content_str.append(headline[:-1] + "/")
 
         return os.linesep.join(content_str)
 

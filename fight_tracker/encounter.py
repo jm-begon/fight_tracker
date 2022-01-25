@@ -92,7 +92,7 @@ class Encounter(Observable):
     def __render__(self):
         curr = self.queue.head
         table = Table(header=True)
-        table.fill_row("Curr.", "Init.", "Participant", "AC", "HP/HP max")
+        table.fill_row("Curr.", "Init.", "Participant", "HP", "AC")
 
         for i, participant in enumerate(self.queue.list_in_order()):
             creature = participant.creature
