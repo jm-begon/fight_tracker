@@ -1,4 +1,4 @@
-from fight_tracker.damage import Damage
+from fight_tracker.mechanics.damage import Damage
 from .base import TargetedEvent
 
 
@@ -27,6 +27,9 @@ class Damaged(TargetedEvent):
     def __int__(self):
         return int(self.damage)
 
+    def __render_self_event__(self):
+        return ["takes", self.damage]
+
 
 class Healed(TargetedEvent):
     def __init__(self, target, bonus, source):
@@ -40,12 +43,14 @@ class Healed(TargetedEvent):
     def __int__(self):
         return int(self.bonus)
 
+    def __render_self_event__(self):
+        return [f"regains {int(self.bonus)} hit point(s)"]
+
 
 class HPEvent(TargetedEvent):
     def __init__(self, target, message, source):
         super(HPEvent, self).__init__(target, source)
         self.message = message
-        self.render_hp_box = False
 
     def __constructor_repr__(self):
         return "{}({}, {}, {})".format(self.__class__.__name__,
@@ -53,8 +58,7 @@ class HPEvent(TargetedEvent):
                                        repr(self.message),
                                        repr(self.source))
 
-    def __render__(self):
-        r = self.message
-        if self.render_hp_box:
-            r = [r, self.source]
-        return r
+    def __render_self_event__(self):
+        if isinstance(self.message, str):
+            return [self.message]
+        return self.message

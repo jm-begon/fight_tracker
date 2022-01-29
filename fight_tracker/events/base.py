@@ -1,6 +1,7 @@
 # TODO: - State for Events
 #       - Events are not callable
 #       - Delayed Events are lazy
+from ..rendering.tree import Tree
 
 
 class Event(object):
@@ -25,7 +26,7 @@ class Event(object):
 
     def __constructor_repr__(self):
         return "{cls}({source})".format(cls=self.__class__.__name__,
-                                     source=repr(self.source))
+                                        source=repr(self.source))
 
     def __repr__(self):
         s = self.__constructor_repr__()
@@ -35,6 +36,15 @@ class Event(object):
 
     def __str__(self):
         return repr(self)
+
+    def __render__self__(self):
+        return str(self)
+
+    def __render__(self):
+        root = Tree(self.__render__self__())
+        for event in self:
+            root.add_child(event.__render__())
+        return root
 
 
 class MessageEvent(Event):
@@ -49,6 +59,9 @@ class MessageEvent(Event):
 
     def __str__(self):
         return str(self.message)
+
+    def __render__self__(self):
+        return self.message
 
 
 class TargetedEvent(Event):
@@ -79,3 +92,14 @@ class TargetedEvent(Event):
         return self.add_source_str("{} receives {}"
                                    "".format(self.target.name,
                                              self.__class__.__name__))
+
+    def __render__self__(self):
+        ls = [self.target]
+        ls.extend(self.__render_self_event__())
+        if self.source_creature is not None:
+            ls.append("from")
+            ls.append(self.source)
+        return ls
+
+    def __render_self_event__(self):
+        return [f"receives {self.__class__.__name__}"]

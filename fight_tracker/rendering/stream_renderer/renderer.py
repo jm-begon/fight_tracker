@@ -29,16 +29,18 @@ class StreamRenderer(Renderer):
     def flush(self, renderable):
         # renderable must be a string at this point
         print(renderable, file=self.out)
+
+    def d_concept(self, concept):
+        concept_str = super().d_concept(concept)
+        return f"*{concept_str}*"
         
-    def r_event(self, event, indent=0):
-        block = [self.indenter(str(event))]
+    def r_tree(self, tree, indent=0):
+        block = [self.indenter(self.dispatch(tree.content))]
         with self.indenter:
-            for e in event:
+            for e in tree:
                 block.append(self.indenter(self.dispatch(e)))
 
         return os.linesep.join(block)
-
-        return super(StreamRenderer, self).r_event(event)
 
     def r_table(self, table):
         content = []
@@ -50,8 +52,6 @@ class StreamRenderer(Renderer):
                 str_row.append(content_str)
                 col_len[j] = max(col_len[j], len(content_str))
             content.append(str_row)
-
-        # TODO nice formatting (header, column, size, etc.)
 
         content_str = []
         sep = " | "

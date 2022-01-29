@@ -14,6 +14,9 @@ class EncounterEvent(Event):
     def __str__(self):
         return str(self.message)
 
+    def __render__self__(self):
+        return self.message
+
 
 class NewRound(EncounterEvent):
     def __init__(self, i, source):
@@ -25,12 +28,11 @@ class NewRound(EncounterEvent):
 
 class TurnEvent(EncounterEvent):
     def __init__(self, current, source):
-        super(TurnEvent, self).__init__("turn of {}"
-                                        "".format(current.name),
+        super(TurnEvent, self).__init__(["turn of ", current.creature],
                                         source)
 
     def add_next(self, next_participant):
-        event = EncounterEvent("next in line is {}".format(next_participant.name),
+        event = EncounterEvent(["next in line is ", next_participant.creature],
                                self.source)
         self.add_sub_events(event)
         return self
@@ -45,7 +47,7 @@ class TurnEvent(EncounterEvent):
 class SkipTurn(EncounterEvent):
     def __init__(self, current, source):
         super(SkipTurn, self).__init__("{} cannot play"
-                                       "".format(current.name),
+                                       "".format(current),
                                        source)
 
 

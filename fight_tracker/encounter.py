@@ -1,5 +1,4 @@
-from .dice import RNG
-from .events.base import MessageEvent
+from fight_tracker.mechanics.ability import Ability
 from .events.encounter import NewRound, TurnEvent, EncounterStart, EncounterEnd
 from .rendering.table import Table, BoolCell
 from .util import CircularQueue, Observable
@@ -92,19 +91,24 @@ class Encounter(Observable):
     def __render__(self):
         curr = self.queue.head
         table = Table(header=True)
-        table.fill_row("Curr.", "Init.", "Participant", "HP", "AC")
+        table.fill_row("Curr.", "Init.", "Participant", "HP", "AC",
+                       *[ability.name for ability in Ability])
 
         for i, participant in enumerate(self.queue.list_in_order()):
             creature = participant.creature
             table.fill_cell(BoolCell(i == curr))
             table.fill_cell(participant.initiative)
-            table.fill_cell(participant.name)
+            table.fill_cell(participant.creature)
             table.fill_cell(creature.pv_box)
-            table.fill_cell(creature.armor_class, new_column=False)
-            # TODO saving throws
+            table.fill_cell(creature.armor_class)
+            for ability in Ability:
+                save = participant.creature.saving_throws.get(ability)
+                if save is None:
+                    table.fill_cell("n/a")
+                else:
+                    table.fill_cell("{:+d}".format(int(save)))
             # TODO quid conditions, concentration?
-
-            table.new_row()
+            table.delete_cell().new_row()
 
         table.delete_row()
 

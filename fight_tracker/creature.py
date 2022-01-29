@@ -1,10 +1,10 @@
 import warnings
 
-from fight_tracker.ability import Ability
-from fight_tracker.damage import Damage
+from fight_tracker.mechanics.ability import Ability
+from fight_tracker.mechanics.damage import Damage
 from fight_tracker.events import Damaged, Healed
-from fight_tracker.events.base import MessageEvent
 from fight_tracker.events.creature import HPEvent
+from fight_tracker.concept import Concept
 from fight_tracker.util import Observable
 
 
@@ -26,13 +26,13 @@ class HpBox(Observable):
         print()
 
         if new_hp < -self.hp_max:
-            self.notify_hp(self._name("{} is dead"), p_event)
+            self.notify_hp("is dead", p_event)
         if new_hp <= 0:
-            self.notify_hp(self._name("{} is unconscious"), p_event)
+            self.notify_hp("is unconscious", p_event)
         elif new_hp < tp:
-            self.notify_hp(self._name("{} is in a critical state"), p_event)
+            self.notify_hp("is in a critical state", p_event)
         elif new_hp < half:
-            self.notify_hp(self._name("{} is in bad shape"), p_event)
+            self.notify_hp("is in bad shape", p_event)
 
         self.set_hp(new_hp, p_event)
 
@@ -46,21 +46,18 @@ class HpBox(Observable):
 
     def set_hp(self, hp, p_event=None):
         self.hp = hp
-        self.notify_hp(self._name("{} is now (HP)"),
-                       p_event=p_event,
-                       with_box=True)
+        self.notify_hp(["is now at", self, "HP"],
+                       p_event=p_event)
 
-    def notify_hp(self, message, p_event=None, with_box=False):
+    def notify_hp(self, message, p_event=None):
         event = HPEvent(self.creature, message, self)
-        if with_box:
-            event.render_hp_box = True
         if p_event:
             p_event.add_sub_events(event)
         else:
             self.notify(event)
 
 
-class Creature(Observable):
+class Creature(Concept, Observable):
     def __init__(self, name, armor_class, current_pv, pv_max=None):
         super().__init__()
         self.name = name
@@ -135,13 +132,21 @@ class Creature(Observable):
 
     def set_saving_throws(self, **kwargs):
         for k, v in kwargs.items():
-            if k not in Ability:
+            ability = Ability[k]
+            if ability is None:
                 warnings.warn("'{}' not an ability. Skipping".format(k))
             else:
-                self.saving_throws[k] = v
+                self.saving_throws[ability] = v
+        return self
 
-    def __render__(self):
-        return str(self)  # TODO
+    def short_repr(self):
+        return self.name
+
+    def mid_repr(self):
+        return repr(self)
+
+    # def long_repr(self):
+    #     return StatBlock()
 
 
 
