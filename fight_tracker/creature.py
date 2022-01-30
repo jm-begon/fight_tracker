@@ -101,7 +101,6 @@ class Creature(Concept, Observable):
     # def long_repr(self):
     #     return StatBlock()
 
-
     def __sub__(self, damage):
         if isinstance(damage, int):
             value = damage
@@ -168,6 +167,15 @@ class Creature(Concept, Observable):
 
     def list_conditions(self):
         return iter(self.conditions)
+
+    def can_act(self):
+        move = True
+        take_act = True
+        for condition in self.conditions:
+            move = move and condition.can_move()
+            take_act = take_act and condition.can_take_action()
+
+        return move or take_act
 
 
 

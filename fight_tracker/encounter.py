@@ -21,10 +21,6 @@ class Participant(object):
                                        repr(self.encounter),
                                        repr(self.initiative))
 
-    def can_act(self):
-        # TODO return event?
-        return not self.creature.is_ko
-
 
 class Encounter(Observable):
     def __init__(self):
@@ -54,7 +50,7 @@ class Encounter(Observable):
         next_participant = None
         for j in range(1, len(self.queue) - 1):
             next_participant = self.queue.peek(j)
-            if next_participant.can_act():
+            if next_participant.creature.can_act():
                 break
             else:
                 next_participant = None
@@ -70,7 +66,7 @@ class Encounter(Observable):
             self.turn = 0
             NewRound(self.round, self).notify()
 
-        if participant.can_act():
+        if participant.creature.can_act():
             next_participant = self.get_next_participant()
             if next_participant is not None:
                 turn_event.add_next(next_participant).notify()
@@ -92,7 +88,8 @@ class Encounter(Observable):
         curr = self.queue.head
         table = Table(header=True)
         table.fill_row("Curr.", "Init.", "Participant", "HP", "AC",
-                       *[ability.name for ability in Ability])
+                       *[ability.name for ability in Ability],
+                       "Conditions")
 
         for i, participant in enumerate(self.queue.list_in_order()):
             creature = participant.creature
@@ -107,8 +104,11 @@ class Encounter(Observable):
                     table.fill_cell("n/a")
                 else:
                     table.fill_cell("{:+d}".format(int(save)))
-            # TODO quid conditions, concentration?
+            table.fill_cell(list(participant.creature.list_conditions()))
+            # TODO concentration?
             table.delete_cell().new_row()
+
+
 
         table.delete_row()
 
