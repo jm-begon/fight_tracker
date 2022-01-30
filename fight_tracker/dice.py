@@ -1,6 +1,7 @@
 from random import Random
 
-# TODO context_manager for advantage and disadvantage
+# TODO context_manager for advantage and disadvantage ?
+
 
 class RNG:
     __instances__ = {}
@@ -86,6 +87,10 @@ class Roll(Intable):
 
     def set_value(self, v):
         self.value = v
+        return self
+
+    def unset(self):
+        self.value = None
         return self
 
     def __int__(self):

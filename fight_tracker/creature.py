@@ -1,11 +1,13 @@
 import warnings
 
-from fight_tracker.mechanics.ability import Ability
-from fight_tracker.mechanics.damage import Damage
-from fight_tracker.events import Damaged, Healed
-from fight_tracker.events.creature import HPEvent
-from fight_tracker.concept import Concept
-from fight_tracker.util import Observable
+from .mechanics.conditions import Dead, Unconscious
+from .events.conditions import Conditioned
+from .mechanics.ability import Ability
+from .mechanics.damage import Damage
+from .events import Damaged, Healed
+from .events.creature import HPEvent
+from .concept import Concept
+from .util import Observable
 
 
 class HpBox(Observable):
@@ -25,10 +27,10 @@ class HpBox(Observable):
         new_hp = old_pv - delta
         print()
 
-        if new_hp < -self.hp_max:
-            self.notify_hp("is dead", p_event)
+        if new_hp <= -self.hp_max:
+            self.creature.add_condition(Dead(), p_event)
         if new_hp <= 0:
-            self.notify_hp("is unconscious", p_event)
+            self.creature.add_condition(Unconscious(), p_event)
         elif new_hp < tp:
             self.notify_hp("is in a critical state", p_event)
         elif new_hp < half:
@@ -51,10 +53,7 @@ class HpBox(Observable):
 
     def notify_hp(self, message, p_event=None):
         event = HPEvent(self.creature, message, self)
-        if p_event:
-            p_event.add_sub_events(event)
-        else:
-            self.notify(event)
+        self.notify(event, p_event)
 
 
 class Creature(Concept, Observable):
@@ -67,6 +66,7 @@ class Creature(Concept, Observable):
         self.pv_box = HpBox(self, current_pv, pv_max)
         self.misc = []
         self.saving_throws = {}
+        self.conditions = set()
 
     @property
     def hp(self):
@@ -80,10 +80,6 @@ class Creature(Concept, Observable):
     def ac(self):
         return self.armor_class
 
-    @property
-    def is_ko(self):
-        return self.hp <= 0
-
     def __repr__(self):
         return "{cls}(name={name}, armor_class={ca}, current_pv={pv}, " \
                "pv_max={pv_max})".format(cls=self.__class__.__name__,
@@ -95,6 +91,16 @@ class Creature(Concept, Observable):
     def add_observer(self, observer):
         super(Creature, self).add_observer(observer)
         self.pv_box.add_observer(observer)
+
+    def short_repr(self):
+        return self.name
+
+    def mid_repr(self):
+        return repr(self)
+
+    # def long_repr(self):
+    #     return StatBlock()
+
 
     def __sub__(self, damage):
         if isinstance(damage, int):
@@ -139,14 +145,31 @@ class Creature(Concept, Observable):
                 self.saving_throws[ability] = v
         return self
 
-    def short_repr(self):
-        return self.name
+    def add_conditions(self, *conditions):
+        self.conditions.union(conditions)
+        return self
 
-    def mid_repr(self):
-        return repr(self)
+    def add_condition(self, condition, p_event=None):
+        self.add_conditions(condition)
 
-    # def long_repr(self):
-    #     return StatBlock()
+        event = Conditioned(self, condition, self)
+        self.notify(event, p_event)
+
+        # TODO replace exhausted lvl6 by dead
+        #      and remove everything (?) on dead
+
+        def remove_condition():
+            try:
+                self.conditions.remove(condition)
+            except KeyError:
+                pass  # Already removed
+
+        return remove_condition
+
+    def list_conditions(self):
+        return iter(self.conditions)
+
+
 
 
 

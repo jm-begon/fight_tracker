@@ -2,9 +2,13 @@ from .table import Table, BoolCell
 from .tree import Tree
 
 
-
 class Renderer(object):
+    def __init__(self):
+        self.full_description = False
+
     def d_concept(self, concept):
+        if self.full_description:
+            return self.dispatch(concept.long_repr())
         return self.dispatch(concept.short_repr())
 
     def r_table(self, table):
@@ -58,6 +62,13 @@ class Renderer(object):
         return self
 
     def __lshift__(self, other):
-        self(other)
+        # Reentrant
+        save = self.full_description
+        try:
+            self.full_description = True
+            self(other)
+        finally:
+            self.full_description = save
+
 
 

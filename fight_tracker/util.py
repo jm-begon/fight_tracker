@@ -8,7 +8,11 @@ class Observable(object):
     def add_observer(self, observer):
         self.observers.add(observer)
 
-    def notify(self, event):
+    def notify(self, event, p_event=None):
+        if p_event:
+            p_event.add_sub_events(event)
+            return
+
         for observer in self.observers:
             observer.update(event)
 

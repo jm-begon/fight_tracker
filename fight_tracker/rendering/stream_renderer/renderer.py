@@ -23,6 +23,7 @@ class Indenter(object):
 
 class StreamRenderer(Renderer):
     def __init__(self, stream=None, indent=2):
+        super().__init__()
         self.out = get_stream(stream)
         self.indenter = Indenter(indent)
 
@@ -32,6 +33,8 @@ class StreamRenderer(Renderer):
 
     def d_concept(self, concept):
         concept_str = super().d_concept(concept)
+        if self.full_description:
+            return concept_str
         return f"*{concept_str}*"
         
     def r_tree(self, tree, indent=0):
