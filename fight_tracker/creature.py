@@ -188,7 +188,6 @@ class Creature(Concept, Observable):
         self.misc.append(text)
         return self
 
-
     def do_concentrate_on(self, boolable):  # for repr purposes
         self.concentration = boolable
         return self
@@ -254,9 +253,24 @@ class Creature(Concept, Observable):
         return move or take_act
 
 
+class PlayerCharacter(Creature):
+    def __init__(self, player, name, armor_class, current_pv, pv_max=None,
+                 speed=30):
+        super(PlayerCharacter, self).__init__(name, armor_class, current_pv, 
+                                              pv_max=pv_max, speed=speed)
+        self.player = player
+
+    # TODO add comment regarding death saves? Problem for nesting events
+    # def add_condition(self, condition, p_event=None):
+    #     remove_fn = super().add_condition(condition, p_event)
+    #     if isinstance(condition, Unconscious):
+    #         self.notify(MessageEvent(self, [], self))
+    #     return remove_fn
 
 
-
+class NPC(Creature):
+    pass  # TODO
+        
 
 
 

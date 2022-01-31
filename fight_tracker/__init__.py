@@ -1,4 +1,4 @@
-from .creature import Creature
+from .creature import Creature, PlayerCharacter, NPC
 from .encounter import Encounter, Participant
 from .launcher import Game
 from .dice import RNG
@@ -15,5 +15,5 @@ __all__ = ["Creature", "Encounter", "Participant", "Game", "StreamRenderer",
            "Blinded", "Charmed", "Deafened", "Frightened", "Incapacitated",
            "Grappled", "Invisible", "Paralyzed", "Petrified", "Poisoned",
            "Restrained", "Stunned", "Unconscious", "Exhausted", "conditions",
-           "Dead", "Damage", "DamageType"]
+           "Dead", "Damage", "DamageType", "PlayerCharacter", "NPC"]
 

@@ -1,4 +1,5 @@
 from fight_tracker.mechanics.ability import Ability
+from .creature import PlayerCharacter, NPC
 from .dice import Roll, D20
 from .events.event import NewRound, TurnEvent, EncounterStart, EncounterEnd, EncounterEvent
 from .rendering.table import Table, BoolCell
@@ -79,7 +80,9 @@ class Encounter(Observable):
 
         else:
             turn_event.disable().notify()
-            return self.next_turn()
+            # TODO differentiate between cannot move and cannot act?
+            if not isinstance(participant.creature, NPC):
+                return self.next_turn()
 
     def start(self):
         EncounterStart(self).notify()
@@ -100,7 +103,10 @@ class Encounter(Observable):
             creature = participant.creature
             table.fill_cell(BoolCell(i == curr))
             table.fill_cell(participant.initiative)
-            table.fill_cell(participant.creature)
+            if isinstance(creature, PlayerCharacter):
+                table.fill_cell((creature, f"({creature.player})"))
+            else:
+                table.fill_cell(creature)
             table.fill_cell(creature.pv_box)
             table.fill_cell(int(creature.armor_class))  # Remove description
             for ability in Ability:
