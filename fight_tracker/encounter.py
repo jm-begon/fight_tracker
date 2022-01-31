@@ -94,7 +94,7 @@ class Encounter(Observable):
         table = Table(header=True)
         table.fill_row("Curr.", "Init.", "Participant", "HP", "AC",
                        *[ability.name for ability in Ability],
-                       "Concentration", "Conditions")
+                       "Concentration", "Conditions", "Speed")
 
         for i, participant in enumerate(self.queue.list_in_order()):
             creature = participant.creature
@@ -102,15 +102,17 @@ class Encounter(Observable):
             table.fill_cell(participant.initiative)
             table.fill_cell(participant.creature)
             table.fill_cell(creature.pv_box)
-            table.fill_cell(int(creature.armor_class)) # Remove description
+            table.fill_cell(int(creature.armor_class))  # Remove description
             for ability in Ability:
                 save = participant.creature.saving_throws.get(ability)
                 if save is None:
                     table.fill_cell("-")
                 else:
                     table.fill_cell("{:+d}".format(int(save)))
-            table.fill_cell(list(participant.creature.list_conditions()))
+
             table.fill_cell(BoolCell(creature.is_concentrating))
+            table.fill_cell(list(participant.creature.list_conditions()))
+            table.fill_cell(creature.speed)  # TODO is speed necessary ?
 
             table.delete_cell().new_row()
 

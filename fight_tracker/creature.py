@@ -6,6 +6,7 @@ from .mechanics.conditions import Dead, Unconscious, Incapacitated
 from .mechanics.ability import Ability
 from .mechanics.damage import Damage
 from .events.event import MessageEvent, Conditioned, Damaged, Healed, HPEvent
+from .mechanics.misc import Speed
 from .rendering.misc import HPBar
 from .util import Observable
 
@@ -66,13 +67,15 @@ class HpBox(Observable):
 
 
 class Creature(Concept, Observable):
-    def __init__(self, name, armor_class, current_pv, pv_max=None):
+    def __init__(self, name, armor_class, current_pv, pv_max=None,
+                 speed=30):
         super().__init__()
         self.name = name
         self.armor_class = armor_class
         if pv_max is None:
             pv_max = current_pv
         self.pv_box = HpBox(self, current_pv, pv_max)
+        self._speed = speed if isinstance(speed, Speed) else Speed(speed)
         self.misc = []
         self.ability_modifiers = {}
         self.saving_throws = {}
@@ -97,6 +100,15 @@ class Creature(Concept, Observable):
     @property
     def initiative_bonus(self):
         return self.ability_modifiers.get(Ability.DEX, 0)
+
+    @property
+    def speed(self):
+        return self._speed
+
+    @speed.setter
+    def speed(self, speed_value):
+        self._speed = speed_value if isinstance(speed_value, Speed) \
+            else Speed(speed_value)
 
     def __repr__(self):
         return "{cls}(name={name}, armor_class={ca}, current_pv={pv}, " \
