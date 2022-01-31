@@ -54,6 +54,9 @@ class Addition(Intable):
     def __repr__(self):
         return f"{self.__class__.__name__}(*{repr(self.intables)})"
 
+    def __str__(self):
+        return " + ".join(str(x) for x in self.intables)
+
 
 class Subtraction(Intable):
     def __init__(self, left_operand, right_operand):
@@ -66,3 +69,6 @@ class Subtraction(Intable):
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.left)}, " \
                f"{repr(self.right)})"
+
+    def __str__(self):
+        return f"{self.left} - {self.right}"

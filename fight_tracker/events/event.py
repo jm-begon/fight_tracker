@@ -218,6 +218,7 @@ class EncounterEnd(EncounterEvent):
     # TODO __render__ to add some finish
 
 
+
 class Conditioned(TargetedEvent):
     def __init__(self, target, condition, source):
         super().__init__(target, source)

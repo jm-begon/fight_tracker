@@ -1,5 +1,6 @@
 from fight_tracker.mechanics.ability import Ability
-from .events.event import NewRound, TurnEvent, EncounterStart, EncounterEnd
+from .dice import Roll, D20
+from .events.event import NewRound, TurnEvent, EncounterStart, EncounterEnd, EncounterEvent
 from .rendering.table import Table, BoolCell
 from .util import CircularQueue, Observable
 
@@ -34,11 +35,15 @@ class Encounter(Observable):
 
     def add(self, creature, initiative=None):
         if initiative is None:
-            initiative = 10  # TODO
+            initiative = Roll(D20() + creature.initiative_bonus)
 
-        initiative = int(initiative)  # for rolls
-        participant = Participant(creature, self, initiative)
+        participant = Participant(creature, self, int(initiative))
         self.queue.add(participant)
+
+        self.notify(EncounterEvent([creature,
+                                    f"roll a {initiative}"
+                                    f" as initiative"],
+                                   self))
         return participant
 
     def __iter__(self):

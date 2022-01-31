@@ -6,6 +6,7 @@ from .mechanics.conditions import Dead, Unconscious, Incapacitated
 from .mechanics.ability import Ability
 from .mechanics.damage import Damage
 from .events.event import MessageEvent, Conditioned, Damaged, Healed, HPEvent
+from .rendering.misc import HPBar
 from .util import Observable
 
 
@@ -60,6 +61,9 @@ class HpBox(Observable):
         event = HPEvent(self.creature, message, self)
         self.notify(event, p_event)
 
+    def __render__(self):
+        return HPBar(self.hp, self.hp_max)
+
 
 class Creature(Concept, Observable):
     def __init__(self, name, armor_class, current_pv, pv_max=None):
@@ -70,6 +74,7 @@ class Creature(Concept, Observable):
             pv_max = current_pv
         self.pv_box = HpBox(self, current_pv, pv_max)
         self.misc = []
+        self.ability_modifiers = {}
         self.saving_throws = {}
         self.concentration = False
         self.conditions = set()
@@ -89,6 +94,10 @@ class Creature(Concept, Observable):
     def ac(self):
         return self.armor_class
 
+    @property
+    def initiative_bonus(self):
+        return self.ability_modifiers.get(Ability.DEX, 0)
+
     def __repr__(self):
         return "{cls}(name={name}, armor_class={ca}, current_pv={pv}, " \
                "pv_max={pv_max})".format(cls=self.__class__.__name__,
@@ -96,6 +105,24 @@ class Creature(Concept, Observable):
                                          ca=repr(self.armor_class),
                                          pv=repr(self.hp),
                                          pv_max=repr(self.hp_max))
+
+    def set_saving_throws(self, **kwargs):
+        for k, v in kwargs.items():
+            ability = Ability[k]
+            if ability is None:
+                warnings.warn("'{}' not an ability. Skipping".format(k))
+            else:
+                self.saving_throws[ability] = v
+        return self
+
+    def set_ability_modifier(self, **kwargs):
+        for k, v in kwargs.items():
+            ability = Ability[k]
+            if ability is None:
+                warnings.warn("'{}' not an ability. Skipping".format(k))
+            else:
+                self.ability_modifiers[ability] = v
+        return self
 
     def add_observer(self, observer):
         super(Creature, self).add_observer(observer)
@@ -149,14 +176,6 @@ class Creature(Concept, Observable):
         self.misc.append(text)
         return self
 
-    def set_saving_throws(self, **kwargs):
-        for k, v in kwargs.items():
-            ability = Ability[k]
-            if ability is None:
-                warnings.warn("'{}' not an ability. Skipping".format(k))
-            else:
-                self.saving_throws[ability] = v
-        return self
 
     def do_concentrate_on(self, boolable):  # for repr purposes
         self.concentration = boolable

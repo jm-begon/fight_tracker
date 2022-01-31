@@ -1,5 +1,8 @@
 from collections import defaultdict
 
+from ..concept import Concept
+
+from .misc import HPBar
 from .table import Table, BoolCell
 from .tree import Tree
 
@@ -19,8 +22,8 @@ class Renderer(object):
     def r_bool_cell(self, bool_cell):
         return str(bool_cell)
 
-    def r_pv_box(self, pv_box):
-        return str(pv_box)
+    def r_hp_bar(self, hp_bar):
+        return str(hp_bar)
 
     def r_str(self, s):
         return str(s)
@@ -34,8 +37,6 @@ class Renderer(object):
         return " ".join(iterable)
 
     def dispatch(self, obj):
-        from ..concept import Concept
-        from ..creature import HpBox
 
         if hasattr(obj, "__render__"):
             return self.dispatch(obj.__render__())
@@ -48,8 +49,8 @@ class Renderer(object):
             return self.r_table(obj)
         elif isinstance(obj, BoolCell):
             return self.r_bool_cell(obj)
-        elif isinstance(obj, HpBox):
-            return self.r_pv_box(obj)
+        elif isinstance(obj, HPBar):
+            return self.r_hp_bar(obj)
         elif isinstance(obj, Tree):
             return self.r_tree(obj)
         else:

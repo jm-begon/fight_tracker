@@ -36,6 +36,9 @@ class Dice(Intable):
         return f"{self.__class__.__name__}({repr(self.sides)}, " \
                f"{repr(self.rng)})"
 
+    def __str__(self):
+        return f"d{self.sides}"
+
 
 class D20(Dice):
     def __init__(self, rng=None):
@@ -69,3 +72,6 @@ class Roll(Intable):
         if self.value is not None:
             s += f".set_value({self.value})"
         return s
+
+    def __str__(self):
+        return f"{self.value} ({self.decorated})"

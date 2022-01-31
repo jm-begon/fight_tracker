@@ -74,7 +74,7 @@ class StreamRenderer(Renderer):
 
         return os.linesep.join(content_str)
 
-    def r_pv_box(self, pv_box):
+    def r_hp_bar(self, pv_box):
         return "{}/{}".format(pv_box.hp, pv_box.hp_max)
 
 
