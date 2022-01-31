@@ -1,12 +1,11 @@
 import warnings
 
-from .mechanics.conditions import Dead, Unconscious
-from .events.conditions import Conditioned
+from .concept import Concept
+from .arithmetic import DescriptiveTrue
+from .mechanics.conditions import Dead, Unconscious, Incapacitated
 from .mechanics.ability import Ability
 from .mechanics.damage import Damage
-from .events import Damaged, Healed
-from .events.creature import HPEvent
-from .concept import Concept
+from .events.event import MessageEvent, Conditioned, Damaged, Healed, HPEvent
 from .util import Observable
 
 
@@ -25,7 +24,6 @@ class HpBox(Observable):
         tp = self.hp_max // 10
         old_pv = self.hp
         new_hp = old_pv - delta
-        print()
 
         if new_hp <= -self.hp_max:
             self.creature.add_condition(Dead(), p_event)
@@ -35,6 +33,13 @@ class HpBox(Observable):
             self.notify_hp("is in a critical state", p_event)
         elif new_hp < half:
             self.notify_hp("is in bad shape", p_event)
+
+        if delta > 0 and self.creature.is_concentrating:
+            dc = max(delta//2,  10)
+            bonus = self.creature.saving_throws.get(Ability.CON)
+            bonus_str = "" if bonus is None else ", CON={:+d}".format(bonus)
+            self.notify_hp(f"must succeed constitution saving throw"
+                           f" (DC={dc}{bonus_str}) or lose concentration", p_event)
 
         self.set_hp(new_hp, p_event)
 
@@ -66,14 +71,18 @@ class Creature(Concept, Observable):
         self.pv_box = HpBox(self, current_pv, pv_max)
         self.misc = []
         self.saving_throws = {}
+        self.concentration = False
         self.conditions = set()
+        self.vulnerabilities = set()  # condition or dmg types
+        self.immunities = set()  # condition or dmg types
+        self.resistances = set()
 
     @property
     def hp(self):
         return self.pv_box.hp
 
     @property
-    def pv_max(self):
+    def hp_max(self):
         return self.pv_box.hp_max
 
     @property
@@ -86,7 +95,7 @@ class Creature(Concept, Observable):
                                          name=repr(self.name),
                                          ca=repr(self.armor_class),
                                          pv=repr(self.hp),
-                                         pv_max=repr(self.pv_max))
+                                         pv_max=repr(self.hp_max))
 
     def add_observer(self, observer):
         super(Creature, self).add_observer(observer)
@@ -107,17 +116,21 @@ class Creature(Concept, Observable):
             damage = Damage(value)
         else:
             value = int(damage)
-        # if value == 0:
-        #     return self.notify_apply(NoOp())
+
         if value < 0:
             return self.__add__(damage)
+
+        if damage.dtype in self.resistances:
+            damage.is_resisted = True
+        if damage.dtype in self.immunities:
+            damage.is_immuned = True
+        if damage.dtype in self.vulnerabilities:
+            damage.is_weakness = True
 
         event = Damaged(self, damage, self)
         self.pv_box.remove_hp(int(event), p_event=event)
         self.notify(event)
 
-        # TODO check for resistances/immunities and adapt damage
-        # TODO handle concentration ?
         return self
 
     def __add__(self, other):
@@ -132,6 +145,7 @@ class Creature(Concept, Observable):
         return self
 
     def add_misc(self, text):
+        # TODO move to block stat?
         self.misc.append(text)
         return self
 
@@ -144,15 +158,46 @@ class Creature(Concept, Observable):
                 self.saving_throws[ability] = v
         return self
 
-    def add_conditions(self, *conditions):
-        self.conditions.union(conditions)
+    def do_concentrate_on(self, boolable):  # for repr purposes
+        self.concentration = boolable
+        return self
+
+    def do_stop_concentrating(self):
+        self.concentration = False
+        return self
+
+    def concentrate_on(self, something, p_event=None):
+        self.do_concentrate_on(DescriptiveTrue(something))
+        self.notify(
+            MessageEvent(self, ["is concentrating on", something], self),
+            p_event
+        )
+
+        return self.stop_concentrating
+
+    def stop_concentrating(self, p_event=None):
+        self.do_stop_concentrating()
+        self.notify(
+            MessageEvent(self, "is no longer concentrating", self),
+            p_event
+        )
+
+    @property
+    def is_concentrating(self):
+        return bool(self.concentration)
+
+    def do_add_conditions(self, *conditions):  # for repr purposes
+        self.conditions.update(conditions)
         return self
 
     def add_condition(self, condition, p_event=None):
-        self.add_conditions(condition)
+        self.do_add_conditions(condition)
 
         event = Conditioned(self, condition, self)
         self.notify(event, p_event)
+
+        if self.is_concentrating and isinstance(condition, Incapacitated):
+            self.stop_concentrating(p_event)
 
         # TODO replace exhausted lvl6 by dead
         #      and remove everything (?) on dead
@@ -176,6 +221,8 @@ class Creature(Concept, Observable):
             take_act = take_act and condition.can_take_action()
 
         return move or take_act
+
+
 
 
 

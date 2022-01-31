@@ -1,1 +1,0 @@
-from .creature import Damaged, Healed

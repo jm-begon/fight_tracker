@@ -1,13 +1,15 @@
+from collections import defaultdict
+
 from .table import Table, BoolCell
 from .tree import Tree
 
 
 class Renderer(object):
     def __init__(self):
-        self.full_description = False
+        self.full_description = defaultdict(int)
 
     def d_concept(self, concept):
-        if self.full_description:
+        if self.full_description[concept] > 0:
             return self.dispatch(concept.long_repr())
         return self.dispatch(concept.short_repr())
 
@@ -62,13 +64,13 @@ class Renderer(object):
         return self
 
     def __lshift__(self, other):
+        # TODO move to game ?
         # Reentrant
-        save = self.full_description
+        self.full_description[other] += 1
         try:
-            self.full_description = True
             self(other)
         finally:
-            self.full_description = save
+            self.full_description[other] -= 1
 
 
 

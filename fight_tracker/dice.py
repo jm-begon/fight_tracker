@@ -1,6 +1,7 @@
 from random import Random
 
 # TODO context_manager for advantage and disadvantage ?
+from fight_tracker.arithmetic import Intable
 
 
 class RNG:
@@ -19,41 +20,6 @@ class RNG:
 
     def draw(self, maximum_value):
         return self.gen.randint(1, maximum_value)
-
-
-class Intable:
-    def __int__(self):
-        return 0
-
-    def __add__(self, other):
-        return Addition(self, other)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}()"
-
-
-class Addition(Intable):
-    def __init__(self, *intables):
-        self.intables = list(intables)
-
-    def __int__(self):
-        return sum(int(i) for i in self.intables)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}(*{repr(self.intables)})"
-
-
-class Subtraction(Intable):
-    def __init__(self, left_operand, right_operand):
-        self.left = left_operand
-        self.right = right_operand
-
-    def __int__(self):
-        return int(self.left) - int(self.right)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.left)}, " \
-               f"{repr(self.right)})"
 
 
 class Dice(Intable):

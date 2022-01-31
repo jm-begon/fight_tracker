@@ -33,7 +33,7 @@ class StreamRenderer(Renderer):
 
     def d_concept(self, concept):
         concept_str = super().d_concept(concept)
-        if self.full_description:
+        if self.full_description[concept] > 0:
             return concept_str
         return f"*{concept_str}*"
         

@@ -98,3 +98,5 @@ class Clock(object):
             return None
         return self.records[-1][0] - self.records[0][0]
 
+
+

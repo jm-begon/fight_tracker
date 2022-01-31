@@ -21,6 +21,9 @@ class Condition(Concept):
     def __eq__(self, other):
         return self.__class__.__name__ == other.__class__.__name__
 
+    def __rshift__(self, creature):
+        return creature.add_condition(self)
+
 
 class Blinded(Condition):
     def long_repr(self):
