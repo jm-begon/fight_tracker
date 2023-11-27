@@ -14,5 +14,3 @@ class Narrator(Logger):
         self.renderer(event)
         # TODO clock rounds by encounters
         self.history.append(event)
-
-

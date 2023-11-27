@@ -1,21 +1,22 @@
-from fight_tracker import Damage
-from fight_tracker import conditions
+from fight_tracker import Damage, conditions
 from fight_tracker.arithmetic import DescriptiveInt
 
-if __name__ == '__main__':
-    from fight_tracker import Creature, Game, NPC
+if __name__ == "__main__":
+    from fight_tracker import NPC, Creature, Game
     from fight_tracker import PlayerCharacter as PC
 
     game, _reg = Game.init()
     E, R = game.encounter, game.renderer
 
-    odric = PC("P1", "Odric", 16, 20, 20).set_saving_throws(
-        CHA=2,
-    ).set_ability_modifier(DEX=1)
-    maudal = PC("P2", "Maudal", 12, 15)
-    alea = PC("P3", "Alea", 14, 16, 19).set_saving_throws(
-        CON=1
+    odric = (
+        PC("P1", "Odric", 16, 20, 20)
+        .set_saving_throws(
+            CHA=2,
+        )
+        .set_ability_modifier(DEX=1)
     )
+    maudal = PC("P2", "Maudal", 12, 15)
+    alea = PC("P3", "Alea", 14, 16, 19).set_saving_throws(CON=1)
 
     gob1 = Creature("Goblin 1", DescriptiveInt(13, "leather armor"), 10, 10)
     gob2 = Creature("Goblin 2", 13, 10, 10)
@@ -56,9 +57,3 @@ if __name__ == '__main__':
     R << E
     alea - 2
     E.end()
-
-
-
-
-
-

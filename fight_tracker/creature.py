@@ -1,11 +1,11 @@
 import warnings
 
-from .concept import Concept
 from .arithmetic import DescriptiveTrue
-from .mechanics.conditions import Dead, Unconscious, Incapacitated
+from .concept import Concept
+from .events.event import Conditioned, Damaged, Healed, HPEvent, MessageEvent
 from .mechanics.ability import Ability
+from .mechanics.conditions import Dead, Incapacitated, Unconscious
 from .mechanics.damage import Damage
-from .events.event import MessageEvent, Conditioned, Damaged, Healed, HPEvent
 from .mechanics.speed import Speed
 from .rendering.misc import HPBar
 from .util import Observable
@@ -37,11 +37,14 @@ class HpBox(Observable):
             self.notify_hp("is in bad shape", p_event)
 
         if delta > 0 and self.creature.is_concentrating:
-            dc = max(delta//2,  10)
+            dc = max(delta // 2, 10)
             bonus = self.creature.saving_throws.get(Ability.CON)
             bonus_str = "" if bonus is None else ", CON={:+d}".format(bonus)
-            self.notify_hp(f"must succeed constitution saving throw"
-                           f" (DC={dc}{bonus_str}) or lose concentration", p_event)
+            self.notify_hp(
+                f"must succeed constitution saving throw"
+                f" (DC={dc}{bonus_str}) or lose concentration",
+                p_event,
+            )
 
         self.set_hp(new_hp, p_event)
 
@@ -55,8 +58,7 @@ class HpBox(Observable):
 
     def set_hp(self, hp, p_event=None):
         self.hp = hp
-        self.notify_hp(["is now at", self, "HP"],
-                       p_event=p_event)
+        self.notify_hp(["is now at", self, "HP"], p_event=p_event)
 
     def notify_hp(self, message, p_event=None):
         event = HPEvent(self.creature, message, self)
@@ -67,8 +69,7 @@ class HpBox(Observable):
 
 
 class Creature(Concept, Observable):
-    def __init__(self, name, armor_class, current_pv, pv_max=None,
-                 speed=30):
+    def __init__(self, name, armor_class, current_pv, pv_max=None, speed=30):
         super().__init__()
         self.name = name
         self.armor_class = armor_class
@@ -107,16 +108,21 @@ class Creature(Concept, Observable):
 
     @speed.setter
     def speed(self, speed_value):
-        self._speed = speed_value if isinstance(speed_value, Speed) \
-            else Speed(speed_value)
+        self._speed = (
+            speed_value if isinstance(speed_value, Speed) else Speed(speed_value)
+        )
 
     def __repr__(self):
-        return "{cls}(name={name}, armor_class={ca}, current_pv={pv}, " \
-               "pv_max={pv_max})".format(cls=self.__class__.__name__,
-                                         name=repr(self.name),
-                                         ca=repr(self.armor_class),
-                                         pv=repr(self.hp),
-                                         pv_max=repr(self.hp_max))
+        return (
+            "{cls}(name={name}, armor_class={ca}, current_pv={pv}, "
+            "pv_max={pv_max})".format(
+                cls=self.__class__.__name__,
+                name=repr(self.name),
+                ca=repr(self.armor_class),
+                pv=repr(self.hp),
+                pv_max=repr(self.hp_max),
+            )
+        )
 
     def set_saving_throws(self, **kwargs):
         for k, v in kwargs.items():
@@ -199,18 +205,14 @@ class Creature(Concept, Observable):
     def concentrate_on(self, something, p_event=None):
         self.do_concentrate_on(DescriptiveTrue(something))
         self.notify(
-            MessageEvent(self, ["is concentrating on", something], self),
-            p_event
+            MessageEvent(self, ["is concentrating on", something], self), p_event
         )
 
         return self.stop_concentrating
 
     def stop_concentrating(self, p_event=None):
         self.do_stop_concentrating()
-        self.notify(
-            MessageEvent(self, "is no longer concentrating", self),
-            p_event
-        )
+        self.notify(MessageEvent(self, "is no longer concentrating", self), p_event)
 
     @property
     def is_concentrating(self):
@@ -254,10 +256,10 @@ class Creature(Concept, Observable):
 
 
 class PlayerCharacter(Creature):
-    def __init__(self, player, name, armor_class, current_pv, pv_max=None,
-                 speed=30):
-        super(PlayerCharacter, self).__init__(name, armor_class, current_pv, 
-                                              pv_max=pv_max, speed=speed)
+    def __init__(self, player, name, armor_class, current_pv, pv_max=None, speed=30):
+        super(PlayerCharacter, self).__init__(
+            name, armor_class, current_pv, pv_max=pv_max, speed=speed
+        )
         self.player = player
 
     # TODO add comment regarding death saves? Problem for nesting events
@@ -270,7 +272,3 @@ class PlayerCharacter(Creature):
 
 class NPC(Creature):
     pass  # TODO
-        
-
-
-

@@ -25,8 +25,9 @@ class Event(object):
         return iter(self._sub_events)
 
     def __constructor_repr__(self):
-        return "{cls}({source})".format(cls=self.__class__.__name__,
-                                        source=repr(self.source))
+        return "{cls}({source})".format(
+            cls=self.__class__.__name__, source=repr(self.source)
+        )
 
     def __repr__(self):
         s = self.__constructor_repr__()
@@ -58,10 +59,11 @@ class TargetedEvent(Event):
         return self
 
     def __constructor_repr__(self):
-        s = "{cls}(target={target}, source={source})" \
-               "".format(cls=self.__class__.__name__,
-                         target=repr(self.target),
-                         source=repr(self.source))
+        s = "{cls}(target={target}, source={source})" "".format(
+            cls=self.__class__.__name__,
+            target=repr(self.target),
+            source=repr(self.source),
+        )
         if self.source_creature is not None:
             s = s + ".add_source_creature({})".format(repr(self.source_creature))
         return s
@@ -72,9 +74,9 @@ class TargetedEvent(Event):
         return "{} from {}".format(s, self.source.name)
 
     def __str__(self):
-        return self.add_source_str("{} receives {}"
-                                   "".format(self.target.name,
-                                             self.__class__.__name__))
+        return self.add_source_str(
+            "{} receives {}" "".format(self.target.name, self.__class__.__name__)
+        )
 
     def __render__self__(self):
         ls = [self.target]
@@ -94,17 +96,17 @@ class MessageEvent(TargetedEvent):
         self.message = message
 
     def __constructor_repr__(self):
-        return "{}({}, {}, {})".format(self.__class__.__name__,
-                                       repr(self.target),
-                                       repr(self.message),
-                                       repr(self.source))
+        return "{}({}, {}, {})".format(
+            self.__class__.__name__,
+            repr(self.target),
+            repr(self.message),
+            repr(self.source),
+        )
 
     def __render_self_event__(self):
         if isinstance(self.message, str):
             return [self.message]
         return self.message
-
-
 
 
 class Attacked(TargetedEvent):
@@ -142,8 +144,9 @@ class Healed(TargetedEvent):
         self.bonus = bonus
 
     def __str__(self):
-        return self.add_source_str("{} regains {} hit point(s)"
-                                   "".format(self.target.name, int(self.bonus)))
+        return self.add_source_str(
+            "{} regains {} hit point(s)" "".format(self.target.name, int(self.bonus))
+        )
 
     def __int__(self):
         return int(self.bonus)
@@ -162,9 +165,9 @@ class EncounterEvent(Event):
         self.message = message
 
     def __constructor_repr__(self):
-        return "{cls}({msg}, source={src})".format(cls=self.__class__.__name__,
-                                                   msg=repr(self.message),
-                                                   src=repr(self.source))
+        return "{cls}({msg}, source={src})".format(
+            cls=self.__class__.__name__, msg=repr(self.message), src=repr(self.source)
+        )
 
     def __str__(self):
         return str(self.message)
@@ -175,46 +178,44 @@ class EncounterEvent(Event):
 
 class NewRound(EncounterEvent):
     def __init__(self, i, source):
-        super().__init__("start of round {}".format(i),
-                         source)
+        super().__init__("start of round {}".format(i), source)
 
     # TODO __render__ to make it subtitle
 
 
 class TurnEvent(EncounterEvent):
     def __init__(self, current, source):
-        super(TurnEvent, self).__init__(["turn of ", current.creature],
-                                        source)
+        super(TurnEvent, self).__init__(["turn of ", current.creature], source)
 
     def add_next(self, next_participant):
-        event = EncounterEvent(["next in line is ", next_participant.creature],
-                               self.source)
+        event = EncounterEvent(
+            ["next in line is ", next_participant.creature], self.source
+        )
         self.add_sub_events(event)
         return self
 
     def disable(self):
-        event = EncounterEvent("cannot play",
-                               self.source)
+        event = EncounterEvent("cannot play", self.source)
         self.add_sub_events(event)
         return self
 
 
 class SkipTurn(EncounterEvent):
     def __init__(self, current, source):
-        super(SkipTurn, self).__init__("{} cannot play"
-                                       "".format(current),
-                                       source)
+        super(SkipTurn, self).__init__("{} cannot play" "".format(current), source)
 
 
 class EncounterStart(EncounterEvent):
     def __init__(self, source):
         super(EncounterStart, self).__init__("battle begins!", source)
+
     # TODO __render__ to make it a title
 
 
 class EncounterEnd(EncounterEvent):
     def __init__(self, source):
         super(EncounterEnd, self).__init__("battle is over", source)
+
     # TODO __render__ to add some finish
 
 
@@ -224,10 +225,12 @@ class Conditioned(TargetedEvent):
         self.condition = condition
 
     def __constructor_repr__(self):
-        return "{}({}, {}, {})".format(self.__class__.__name__,
-                                       repr(self.target),
-                                       repr(self.condition),
-                                       repr(self.source))
+        return "{}({}, {}, {})".format(
+            self.__class__.__name__,
+            repr(self.target),
+            repr(self.condition),
+            repr(self.source),
+        )
 
     def __render_self_event__(self):
         return ["is", self.condition]

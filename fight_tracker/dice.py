@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 from random import Random
+from typing import Any, Dict
 
 # TODO context_manager for advantage and disadvantage ?
 from fight_tracker.arithmetic import Intable
 
 
 class RNG:
-    __instances__ = {}
+    __instances__: Dict[Any, RNG] = {}
 
     @classmethod
     def get(cls, seed=None):
@@ -34,8 +37,7 @@ class Dice(Intable):
         return self.rng.draw(self.sides)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.sides)}, " \
-               f"{repr(self.rng)})"
+        return f"{self.__class__.__name__}({repr(self.sides)}, " f"{repr(self.rng)})"
 
     def __str__(self):
         return f"d{self.sides}"

@@ -1,11 +1,9 @@
 from collections import defaultdict
 
 from ..concept import Concept
-
-from ..mechanics.speed import Unit, Speed
-
+from ..mechanics.speed import Speed, Unit
 from .misc import HPBar
-from .table import Table, BoolCell
+from .table import BoolCell, Table
 from .tree import Tree
 
 
@@ -33,8 +31,7 @@ class Renderer(object):
 
     def r_tree(self, tree):
         ls = [self.dispatch(e) for e in tree]
-        return self.concat([self.dispatch(tree.content),
-                            self.concat(ls)])
+        return self.concat([self.dispatch(tree.content), self.concat(ls)])
 
     def r_speed(self, speed):
         unit = speed.unit
@@ -49,7 +46,6 @@ class Renderer(object):
         return " ".join(iterable)
 
     def dispatch(self, obj):
-
         if hasattr(obj, "__render__"):
             return self.dispatch(obj.__render__())
         elif isinstance(obj, list) or isinstance(obj, tuple):
@@ -86,6 +82,3 @@ class Renderer(object):
             self(other)
         finally:
             self.full_description[other] -= 1
-
-
-

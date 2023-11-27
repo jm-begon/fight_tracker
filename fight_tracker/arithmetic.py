@@ -40,8 +40,10 @@ class DescriptiveInt(Intable):
         return f"{self.value} ({self.description})"
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.value)}, " \
-               f"{repr(self.description)})"
+        return (
+            f"{self.__class__.__name__}({repr(self.value)}, "
+            f"{repr(self.description)})"
+        )
 
 
 class Addition(Intable):
@@ -67,8 +69,7 @@ class Subtraction(Intable):
         return int(self.left) - int(self.right)
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({repr(self.left)}, " \
-               f"{repr(self.right)})"
+        return f"{self.__class__.__name__}({repr(self.left)}, " f"{repr(self.right)})"
 
     def __str__(self):
         return f"{self.left} - {self.right}"

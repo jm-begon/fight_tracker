@@ -10,10 +10,10 @@ class Unit(Enum):
         return feet * 0.3048
 
     def feet2squares(self, feet):
-        return feet / 5.
+        return feet / 5.0
 
     def squares2feet(self, sq):
-        return sq * 5.
+        return sq * 5.0
 
     def meters2feet(self, meters):
         return meters / 0.3048
@@ -61,7 +61,6 @@ class Speed:
 
 
 class FlyingSpeed(Speed):
-
     @property
     def prefix(self):
         return "fly"

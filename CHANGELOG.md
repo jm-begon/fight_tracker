@@ -6,5 +6,5 @@
 - Run encounter
     - Manage order
       - Initiative
-      - K.O. / Death  
+      - K.O. / Death
     - Manage damage
