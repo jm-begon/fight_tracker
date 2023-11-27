@@ -15,8 +15,9 @@ class RNG:
             cls.__instances__[seed] = inst
         return inst
 
-    def __init__(self, seed):
+    def __init__(self, name, seed=None):
         self.gen = Random(seed)
+        self.__class__.__instances__[name] = self
 
     def draw(self, maximum_value):
         return self.gen.randint(1, maximum_value)

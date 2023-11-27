@@ -6,7 +6,7 @@ from .mechanics.conditions import Dead, Unconscious, Incapacitated
 from .mechanics.ability import Ability
 from .mechanics.damage import Damage
 from .events.event import MessageEvent, Conditioned, Damaged, Healed, HPEvent
-from .mechanics.misc import Speed
+from .mechanics.speed import Speed
 from .rendering.misc import HPBar
 from .util import Observable
 

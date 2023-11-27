@@ -1,0 +1,13 @@
+# Testing
+pytest
+pytest-cov
+chispa
+
+# Static checking
+black
+isort
+
+# Typing
+mypy
+types-docutils
+types-requests

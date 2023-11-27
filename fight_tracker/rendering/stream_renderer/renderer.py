@@ -22,8 +22,8 @@ class Indenter(object):
 
 
 class StreamRenderer(Renderer):
-    def __init__(self, stream=None, indent=2):
-        super().__init__()
+    def __init__(self, stream=None, unit=None, indent=2):
+        super().__init__(unit)
         self.out = get_stream(stream)
         self.indenter = Indenter(indent)
 
@@ -75,7 +75,8 @@ class StreamRenderer(Renderer):
         return os.linesep.join(content_str)
 
     def r_hp_bar(self, pv_box):
-        return "{}/{}".format(pv_box.hp, pv_box.hp_max)
+        percents = pv_box.hp / pv_box.hp_max * 100
+        return "{}/{} ({:.1f} %)".format(pv_box.hp, pv_box.hp_max, percents)
 
 
 
