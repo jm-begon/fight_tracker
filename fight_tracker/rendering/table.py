@@ -46,8 +46,10 @@ class Table(object):
 
     def __str__(self):
         import os
-        return os.linesep.join([" ".join([cell for cell in row])
-                                for row in self.content])
+
+        return os.linesep.join(
+            [" ".join([cell for cell in row]) for row in self.content]
+        )
 
     def __len__(self):
         return len(self.content)

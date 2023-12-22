@@ -1,4 +1,4 @@
-from datetime import time, datetime
+from datetime import datetime, time
 
 
 class Observable(object):
@@ -97,6 +97,3 @@ class Clock(object):
         if len(self.records) < 2:
             return None
         return self.records[-1][0] - self.records[0][0]
-
-
-

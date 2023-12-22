@@ -1,8 +1,8 @@
 import os
 from collections import defaultdict
 
-from .util import get_stream
 from ..renderer import Renderer
+from .util import get_stream
 
 
 class Indenter(object):
@@ -18,12 +18,12 @@ class Indenter(object):
         self.indent -= self.width
 
     def __call__(self, s):
-        return " "*self.indent + s
+        return " " * self.indent + s
 
 
 class StreamRenderer(Renderer):
-    def __init__(self, stream=None, indent=2):
-        super().__init__()
+    def __init__(self, stream=None, unit=None, indent=2):
+        super().__init__(unit)
         self.out = get_stream(stream)
         self.indenter = Indenter(indent)
 
@@ -36,7 +36,7 @@ class StreamRenderer(Renderer):
         if self.full_description[concept] > 0:
             return concept_str
         return f"*{concept_str}*"
-        
+
     def r_tree(self, tree, indent=0):
         block = [self.indenter(self.dispatch(tree.content))]
         with self.indenter:
@@ -58,7 +58,9 @@ class StreamRenderer(Renderer):
 
         content_str = []
         sep = " | "
-        headline = "+-" + "-+-".join(["-"*col_len[l] for l in range(len(col_len))]) + "-+"
+        headline = (
+            "+-" + "-+-".join(["-" * col_len[l] for l in range(len(col_len))]) + "-+"
+        )
 
         content_str.append("/" + headline[1:])
         for i, row in enumerate(content):
@@ -75,10 +77,5 @@ class StreamRenderer(Renderer):
         return os.linesep.join(content_str)
 
     def r_hp_bar(self, pv_box):
-        return "{}/{}".format(pv_box.hp, pv_box.hp_max)
-
-
-
-
-
-
+        percents = pv_box.hp / pv_box.hp_max * 100
+        return "{}/{} ({:.1f} %)".format(pv_box.hp, pv_box.hp_max, percents)

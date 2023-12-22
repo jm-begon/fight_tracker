@@ -1,8 +1,15 @@
 from fight_tracker.mechanics.ability import Ability
-from .creature import PlayerCharacter, NPC
-from .dice import Roll, D20
-from .events.event import NewRound, TurnEvent, EncounterStart, EncounterEnd, EncounterEvent
-from .rendering.table import Table, BoolCell
+
+from .creature import NPC, PlayerCharacter
+from .dice import D20, Roll
+from .events.event import (
+    EncounterEnd,
+    EncounterEvent,
+    EncounterStart,
+    NewRound,
+    TurnEvent,
+)
+from .rendering.table import BoolCell, Table
 from .util import CircularQueue, Observable
 
 
@@ -18,10 +25,12 @@ class Participant(object):
         return self.creature.name
 
     def __repr__(self):
-        return "{}({}, {}, {})".format(self.__class__.__name__,
-                                       repr(self.creature),
-                                       repr(self.encounter),
-                                       repr(self.initiative))
+        return "{}({}, {}, {})".format(
+            self.__class__.__name__,
+            repr(self.creature),
+            repr(self.encounter),
+            repr(self.initiative),
+        )
 
 
 class Encounter(Observable):
@@ -41,10 +50,9 @@ class Encounter(Observable):
         participant = Participant(creature, self, int(initiative))
         self.queue.add(participant)
 
-        self.notify(EncounterEvent([creature,
-                                    f"roll a {initiative}"
-                                    f" as initiative"],
-                                   self))
+        self.notify(
+            EncounterEvent([creature, f"roll a {initiative}" f" as initiative"], self)
+        )
         return participant
 
     def __iter__(self):
@@ -95,9 +103,16 @@ class Encounter(Observable):
     def __render__(self):
         curr = self.queue.head
         table = Table(header=True)
-        table.fill_row("Curr.", "Init.", "Participant", "HP", "AC",
-                       *[ability.name for ability in Ability],
-                       "Concentration", "Conditions", "Speed")
+        table.fill_row(
+            "Curr.",
+            "Init.",
+            "Participant",
+            "HP",
+            "AC",
+            *[ability.name for ability in Ability],
+            "Concentration",
+            "Conditions",
+        )
 
         for i, participant in enumerate(self.queue.list_in_order()):
             creature = participant.creature
@@ -118,13 +133,9 @@ class Encounter(Observable):
 
             table.fill_cell(BoolCell(creature.is_concentrating))
             table.fill_cell(list(participant.creature.list_conditions()))
-            table.fill_cell(creature.speed)  # TODO is speed necessary ?
 
             table.delete_cell().new_row()
 
         table.delete_row()
 
         return table
-
-
-
