@@ -1,4 +1,4 @@
-from fight_tracker.mechanics.ability import Ability
+from __future__ import annotations
 
 from .creature import NPC, PlayerCharacter
 from .dice import D20, Roll
@@ -9,6 +9,7 @@ from .events.event import (
     NewRound,
     TurnEvent,
 )
+from .mechanics.ability import Ability
 from .rendering.table import BoolCell, Table
 from .util import CircularQueue, Observable
 
@@ -99,6 +100,7 @@ class Encounter(Observable):
 
     def end(self):
         EncounterEnd(self).notify()
+        return self
 
     def __render__(self):
         curr = self.queue.head
@@ -139,3 +141,9 @@ class Encounter(Observable):
         table.delete_row()
 
         return table
+
+    def __add__(self, __o: int) -> Encounter:
+        for _ in range(__o):
+            self.next_turn()
+
+        return self
