@@ -1,11 +1,17 @@
+from __future__ import annotations
+
+from typing import Self
+
+from .creature import Creature
 from .dice import RNG
 from .encounter import Encounter
 from .rendering import Narrator, StreamRenderer
+from .typing import Intable
 
 
 class Game(object):
     @classmethod
-    def init(cls, seed=None, renderer=None, narrator_factory=None):
+    def init(cls, seed=None, renderer=None, narrator_factory=None) -> Game:
         rng = RNG(seed)
 
         if narrator_factory is None:
@@ -17,13 +23,9 @@ class Game(object):
         narrator = narrator_factory(renderer)
         game = cls(rng, narrator)
 
-        def reg(creature, init=None):
-            game.register(creature)
-            game.encounter.add(creature, init)
-
         narrator.hello()
 
-        return game, reg
+        return game
 
     def __init__(self, rng, narrator, *encounters):
         self.rng = rng
@@ -49,3 +51,25 @@ class Game(object):
         self.encounters.append(encounter)
         self.register(encounter)
         return encounter
+
+    def populate_encounter(self) -> EncounterBuilder:
+        return EncounterBuilder(self)
+
+    def create_encounter(self) -> EncounterBuilder:
+        self.new_encounter()
+        return self.populate_encounter()
+
+
+class EncounterBuilder:
+    def __init__(self, game: Game) -> None:
+        self.game = game
+
+    def add(self, creature, initiative: Intable | None = None) -> Self:
+        self.game.register(creature)
+        self.game.encounter.add(creature, initiative)
+        return self
+
+    def start(self) -> Encounter:
+        e = self.game.encounter
+        e.start()
+        return e

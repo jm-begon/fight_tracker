@@ -1,7 +1,8 @@
+from .backend.ipython_rendering import override_ip_repr_encounter
 from .creature import NPC, Creature, PlayerCharacter
 from .dice import RNG
 from .encounter import Encounter, Participant
-from .launcher import Game
+from .launcher import EncounterBuilder, Game
 from .mechanics import conditions
 from .mechanics.conditions import (
     Blinded,
@@ -33,6 +34,7 @@ __all__ = [
     "Blinded",
     "Charmed",
     "Deafened",
+    "EncounterBuilder",
     "Frightened",
     "Incapacitated",
     "Grappled",
@@ -50,4 +52,5 @@ __all__ = [
     "DamageType",
     "PlayerCharacter",
     "NPC",
+    "override_ip_repr_encounter",
 ]
