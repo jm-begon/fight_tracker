@@ -62,7 +62,7 @@ class Renderer(object):
         elif isinstance(obj, Tree):
             return self.r_tree(obj)
         elif isinstance(obj, Speed):
-            return r_speed(obj)
+            return self.r_speed(obj)
         else:
             return self.r_str(obj)
 

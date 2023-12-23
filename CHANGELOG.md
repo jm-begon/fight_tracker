@@ -1,4 +1,8 @@
-# Core
+# CHANGELOG
+
+## 0.0.2
+- Stat blocks
+## 0.0.1
 
 - Create fight participants
     - Players
