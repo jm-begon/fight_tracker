@@ -20,8 +20,8 @@ def test_stream_render() -> None:
         armor_class=DescriptiveInt(13, "natural armor"),
         max_hit_points=3 * Dice(6, "expectation") + 3,
         speed=Speed(30),
-        ability_modifiers=set(),
-        skills=set(),
+        saving_throw_proficiencies=None,  # TODO
+        skill_proficiencies=None,  # TODO
         passive_perception=12,
         senses=("Darkvision 60ft"),
         languages=("Common", "Draconic"),
@@ -45,11 +45,10 @@ def test_stream_render() -> None:
             ),
             Action(
                 "Track",
-                "Special",
                 "1/Day. The kobold tracker can use its action to pinpoint the location of a specific creature it is familiar with, as long as the creature is within 1 mile and has left a scent trail within the last 24 hours.",
             ),
         ),
     )
 
-    sr << kobold
+    sr(kobold)
     # assert False

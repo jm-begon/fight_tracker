@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
 
+from ..card import Card, CardSeparator, Description
 from ..renderer import Renderer
 from .util import get_stream
 
@@ -77,5 +78,24 @@ class StreamRenderer(Renderer):
         return os.linesep.join(content_str)
 
     def r_hp_bar(self, pv_box):
-        percents = pv_box.hp / pv_box.hp_max * 100
+        percents = 100 * int(pv_box.hp) / int(pv_box.hp_max)
         return "{}/{} ({:.1f} %)".format(pv_box.hp, pv_box.hp_max, percents)
+
+    def r_description(self, description: Description) -> str:
+        tmp = []
+        if description.name is not None:
+            tmp.append(self.dispatch(description.name))
+
+        for key, value in description:
+            tmp.append(f"- **{key}**: {self.dispatch(value)}")
+
+        return os.linesep.join(tmp)
+
+    def r_card(self, card: Card) -> str:
+        tmp = [card.title.upper()]
+        for x in card:
+            if isinstance(x, CardSeparator):
+                continue  # TODO
+            tmp.append(self.dispatch(x))
+
+        return os.linesep.join(tmp)
