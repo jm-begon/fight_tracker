@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from random import Random
-from typing import Any, Dict, Literal
+from typing import Any, Dict, Literal, Union
 
 # TODO context_manager for advantage and disadvantage ?
 from .arithmetic import BaseIntable
 from .typing import Intable
 
-RNGLike = int | Literal["expectation"] | "BaseDrawer"
+RNGLike = Union[int, Literal["expectation"], "BaseDrawer"]
 
 
 class BaseDrawer:
