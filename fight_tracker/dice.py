@@ -79,6 +79,9 @@ class Dice(BaseIntable):
     def __rmul__(self, factor: int) -> Dice:
         return self.__mul__(factor)
 
+    def roll(self) -> Roll:
+        return Roll(self).set_value(int(self))
+
 
 class D20(Dice):
     def __init__(self, rng=None):

@@ -92,7 +92,9 @@ class StatBlock:
             .add_item("Sense", list(self.senses) if self.senses is not None else None)
             .add_item(
                 "Languages",
-                list(self.languages) if self.languages is not None else None,
+                ", ".join(str(lg) for lg in self.languages)
+                if self.languages is not None
+                else None,
             )
             .add_item("Challenge rating", self.challenge_rating),
             CardSeparator(),

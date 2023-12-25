@@ -1,7 +1,7 @@
 check: lint test
 
 test:
-	pytest --cov .
+	pytest .
 
 lint:
 	pre-commit run --all-files
