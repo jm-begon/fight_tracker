@@ -31,6 +31,12 @@ class StatBlock:
     max_hit_points: Intable | None = None
     current_hit_points: int | None = None
     speed: Speed | None = None
+    strength: Intable | None = None
+    dexterity: Intable | None = None
+    constitution: Intable | None = None
+    intelligence: Intable | None = None
+    wisdom: Intable | None = None
+    charisma: Intable | None = None
     saving_throw_proficiencies: Collection[Ability] | None = None
     skill_proficiencies: Collection[Skill] | None = None
     passive_perception: int | None = None
@@ -61,7 +67,7 @@ class StatBlock:
         if len(info) < 2:
             info = None
         if self.alignment:
-            alignment = self.alignment.name if self.alignment else None
+            alignment = self.alignment.value if self.alignment else None
             info = ", ".join([str(x) for x in [info, alignment] if x is not None])
 
         card.add(
@@ -75,9 +81,7 @@ class StatBlock:
             .add_item("Speed", self.speed),
         )
 
-        ability_table = Table(header=True)
-        # TODO first row: ability modifiers
-        # TODO second row: + prof bonus for saving throws
+        ability_table = self._get_ability_table()
 
         card.add(
             ability_table,
@@ -109,3 +113,42 @@ class StatBlock:
         # TODO legendary actions
 
         return card
+
+    def _get_ability_table(self) -> Table:
+        table = Table(header=True)
+        table.fill_row(
+            "",
+            *[ability.name for ability in Ability],
+        )
+        table.fill_cell("Modifier")
+        for ability in Ability:
+            score = getattr(self, ability.value, None)
+            if score is None:
+                table.fill_cell("-")
+            else:
+                table.fill_cell(f"{AbilityScore.compute_modifier(score):+d}")
+
+        table.delete_cell().new_row()
+
+        table.fill_cell("Save")
+        saving_throw_proficiencies = self.saving_throw_proficiencies or set()
+        for ability in Ability:
+            score = getattr(self, ability.value, None)
+            if score is None:
+                table.fill_cell("-")
+                continue
+            if self.proficency_bonus is None:
+                table.fill_cell(BoolCell(ability in saving_throw_proficiencies))
+            else:
+                value = AbilityScore.compute_modifier(score)
+                if ability in saving_throw_proficiencies:
+                    value += int(self.proficency_bonus)
+
+                table.fill_cell(f"{value:+d}")
+
+        table.delete_cell()
+
+        # TODO first row: ability modifiers
+        # TODO second row: + prof bonus for saving throws
+
+        return table

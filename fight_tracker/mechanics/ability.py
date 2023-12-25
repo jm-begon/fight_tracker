@@ -37,13 +37,17 @@ class AbilityScore(BaseIntable):
 
     @property
     def modifier(self) -> int:
-        return (int(self.score) - 10) // 2
+        return self.compute_modifier(self.score)
 
     def __int__(self) -> int:
         return self.modifier
 
     def __str__(self) -> str:
         return f"{self.modifier} ({self.score} {self.ability.name})"
+
+    @classmethod
+    def compute_modifier(cls, score: Intable) -> int:
+        return (int(score) - 10) // 2
 
     @classmethod
     def strength(cls, raw_score: Intable) -> AbilityScore:

@@ -95,7 +95,7 @@ class StreamRenderer(Renderer):
         tmp = [card.title.upper()]
         for x in card:
             if isinstance(x, CardSeparator):
-                continue  # TODO
+                x = ""
             tmp.append(self.dispatch(x))
 
         return os.linesep.join(tmp)

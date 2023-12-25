@@ -1,5 +1,6 @@
 from fight_tracker.arithmetic import DescriptiveInt
 from fight_tracker.dice import Dice
+from fight_tracker.mechanics.ability import Ability
 from fight_tracker.mechanics.misc import Alignment, Size
 from fight_tracker.mechanics.speed import Speed
 from fight_tracker.rendering import StreamRenderer
@@ -20,10 +21,16 @@ def test_stream_render() -> None:
         armor_class=DescriptiveInt(13, "natural armor"),
         max_hit_points=3 * Dice(6, "expectation") + 3,
         speed=Speed(30),
-        saving_throw_proficiencies=None,  # TODO
+        strength=7,
+        dexterity=15,
+        constitution=9,
+        intelligence=8,
+        wisdom=7,
+        charisma=8,
+        saving_throw_proficiencies=(Ability.WIS,),
         skill_proficiencies=None,  # TODO
         passive_perception=12,
-        senses=("Darkvision 60ft"),
+        senses=("Darkvision 60ft",),
         languages=("Common", "Draconic"),
         challenge_rating="1/2",
         abilities={
