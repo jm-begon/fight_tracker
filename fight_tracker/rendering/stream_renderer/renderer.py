@@ -84,11 +84,8 @@ class StreamRenderer(Renderer):
     def r_hp_bar(self, pv_box):
         hp = int(pv_box.hp)
         hp_max = int(pv_box.hp_max)
-        hp_max_str = str(pv_box.hp_max)
-        if str(hp_max) != hp_max_str:
-            hp_max_str = f"{hp_max} ({hp_max_str})"
         percents = 100 * int(pv_box.hp) / int(pv_box.hp_max)
-        return f"{hp}/{hp_max_str} (= {percents:.1f} %)"
+        return f"{hp}/{hp_max} ({percents:.1f} %)"
 
     def r_description(self, description: Description) -> str:
         tmp = []
@@ -104,7 +101,10 @@ class StreamRenderer(Renderer):
         tmp = [card.title.upper()]
         for x in card:
             if isinstance(x, CardSeparator):
-                x = "-" * (self.card_max_length - 4)
+                x_ = "-" * (self.card_max_length - 4)
+                if x.name:
+                    x_ += x.name
+                x = x_[-(self.card_max_length - 4) :]
             tmp.extend(self.dispatch(x).split(os.linesep))
 
         trimed_tmp: List[str] = []

@@ -62,6 +62,7 @@ def test_stream_render() -> None:
     )
 
     sr(kobold)
+    print(sr.strip_formating(buffer.getvalue()))
     given = sr.strip_formating(buffer.getvalue()).split(os.linesep)
 
     expected = """/------------------------------------------------------------------------------+
@@ -92,7 +93,7 @@ def test_stream_render() -> None:
 | (Perception) checks that rely on smell.                                      |
 | - Infravision: The kobold tracker can see in both magical and                |
 | non-magical darkness as if it were bright light up to a distance of 60 feet. |
-| ---------------------------------------------------------------------------- |
+| ----------------------------------------------------------------------Action |
 | - Shortsword: Melee Weapon Attack: +4 to hit, reach 5 ft., one               |
 | target. Hit: 5 (1d6 + 2) piercing damage.                                    |
 | - Sling: Ranged Weapon Attack: +4 to hit, range 30/120 ft., one              |

@@ -85,7 +85,7 @@ class Dice(BaseIntable):
 
 class D20(Dice):
     def __init__(self, rng=None):
-        super(D20, self).__init__(sides=20, n_dices=1, rng=rng)
+        super().__init__(sides=20, rng=rng)
         # TODO manage adv/dis
 
     def __repr__(self):

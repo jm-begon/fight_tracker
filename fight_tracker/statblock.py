@@ -112,7 +112,7 @@ class StatBlock:
                 descr = f"{action.category}: {descr}"
             action_descr.add_item(action.name, descr)
 
-        card.add(ability_descr, CardSeparator(), action_descr)
+        card.add(ability_descr, CardSeparator("Action"), action_descr)
 
         # TODO legendary actions
 
