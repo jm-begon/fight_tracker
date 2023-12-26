@@ -99,20 +99,22 @@ class StatBlock:
                 else None,
             )
             .add_item("Challenge rating", self.challenge_rating),
-            CardSeparator(),
         )
-        ability_descr = Description()
-        for name, descr in self.abilities.items():
-            ability_descr.add_item(name, descr)
+        if self.abilities:
+            ability_descr = Description()
+            for name, descr in self.abilities.items():
+                ability_descr.add_item(name, descr)
+            card.add(CardSeparator(), ability_descr)
 
-        action_descr = Description()
-        for action in self.actions:
-            descr = action.description
-            if action.category:
-                descr = f"{action.category}: {descr}"
-            action_descr.add_item(action.name, descr)
+        if self.actions:
+            action_descr = Description()
+            for action in self.actions:
+                descr = action.description
+                if action.category:
+                    descr = f"{action.category}: {descr}"
+                action_descr.add_item(action.name, descr)
 
-        card.add(ability_descr, CardSeparator("Action"), action_descr)
+            card.add(CardSeparator("Action"), action_descr)
 
         # TODO legendary actions
 

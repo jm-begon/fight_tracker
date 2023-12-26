@@ -62,7 +62,6 @@ def test_stream_render() -> None:
     )
 
     sr(kobold)
-    print(sr.strip_formating(buffer.getvalue()))
     given = sr.strip_formating(buffer.getvalue()).split(os.linesep)
 
     expected = """/------------------------------------------------------------------------------+
@@ -107,3 +106,18 @@ def test_stream_render() -> None:
     )
     for i in range(len(expected)):
         assert given[i] == expected[i]
+
+
+def test_stream_render_small() -> None:
+    buffer = StringIO()
+    sr = StreamRenderer(buffer)
+
+    kobold = StatBlock(
+        name="Kobold Tracker",
+        armor_class=13,
+        max_hit_points=12,
+    )
+
+    sr(kobold)
+    print(sr.strip_formating(buffer.getvalue()))
+    assert False
