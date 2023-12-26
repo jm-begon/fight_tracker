@@ -6,7 +6,6 @@ from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
 from .mechanics.misc import Alignment, Size
 from .mechanics.speed import Speed
 from .rendering.card import Card, CardSeparator, Description
-from .rendering.misc import HPBar
 from .rendering.table import BoolCell, Table
 from .typing import Intable
 
@@ -29,7 +28,6 @@ class StatBlock:
     alignment: Alignment | None = None
     armor_class: Intable | None = None
     max_hit_points: Intable | None = None
-    current_hit_points: int | None = None
     speed: Speed | None = None
     strength: Intable | None = None
     dexterity: Intable | None = None
@@ -70,14 +68,18 @@ class StatBlock:
             alignment = self.alignment.value if self.alignment else None
             info = ", ".join([str(x) for x in [info, alignment] if x is not None])
 
+        hp_str = None
+        if self.max_hit_points:
+            hp_str = str(self.max_hit_points)
+            hp_int = int(self.max_hit_points)
+            if hp_str != str(hp_int):
+                hp_str = f"{hp_int} ({hp_str})"
         card.add(
             info,
             CardSeparator(),
             Description()
             .add_item("Armor Class", self.armor_class)
-            .add_item(
-                "Hit points", HPBar.create(self.max_hit_points, self.current_hit_points)
-            )
+            .add_item("Hit points", hp_str)
             .add_item("Speed", self.speed),
         )
 
