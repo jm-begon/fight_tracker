@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Self
 
-from .creature import Creature
 from .dice import RNG
 from .encounter import Encounter
 from .rendering import Narrator, StreamRenderer
@@ -12,7 +11,7 @@ from .typing import Intable
 class Game(object):
     @classmethod
     def init(cls, seed=None, renderer=None, narrator_factory=None) -> Game:
-        rng = RNG(seed)
+        rng = RNG.get(seed)
 
         if narrator_factory is None:
             narrator_factory = Narrator

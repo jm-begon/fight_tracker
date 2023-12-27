@@ -17,7 +17,7 @@ class DescriptiveTrue(Boolable):
         return f"{self.__class__.__name__}({repr(self.description)})"
 
 
-class Intable:
+class BaseIntable:
     def __int__(self):
         return 0
 
@@ -28,7 +28,7 @@ class Intable:
         return f"{self.__class__.__name__}()"
 
 
-class DescriptiveInt(Intable):
+class DescriptiveInt(BaseIntable):
     def __init__(self, value, description):
         self.value = value
         self.description = description
@@ -46,7 +46,7 @@ class DescriptiveInt(Intable):
         )
 
 
-class Addition(Intable):
+class Addition(BaseIntable):
     def __init__(self, *intables):
         self.intables = list(intables)
 
@@ -60,7 +60,7 @@ class Addition(Intable):
         return " + ".join(str(x) for x in self.intables)
 
 
-class Subtraction(Intable):
+class Subtraction(BaseIntable):
     def __init__(self, left_operand, right_operand):
         self.left = left_operand
         self.right = right_operand

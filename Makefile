@@ -1,7 +1,7 @@
 check: lint test
 
 test:
-	pytest --cov .
+	PYTHONPATH="fight_tracker/" pytest .
 
 lint:
 	pre-commit run --all-files

@@ -1,4 +1,4 @@
-from .backend.ipython_rendering import override_ip_repr_encounter
+from .backend.ipython_rendering import override_ip_repr, override_ip_repr_encounter
 from .creature import NPC, Creature, PlayerCharacter
 from .dice import RNG
 from .encounter import Encounter, Participant
@@ -24,6 +24,7 @@ from .mechanics.conditions import (
 from .mechanics.damage import Damage, DamageType
 from .rendering.narrator import Narrator
 from .rendering.stream_renderer.renderer import StreamRenderer
+from .statblock import StatBlock
 
 __all__ = [
     "Creature",
@@ -43,6 +44,7 @@ __all__ = [
     "Petrified",
     "Poisoned",
     "Restrained",
+    "StatBlock",
     "Stunned",
     "Unconscious",
     "Exhausted",
@@ -52,5 +54,6 @@ __all__ = [
     "DamageType",
     "PlayerCharacter",
     "NPC",
+    "override_ip_repr",
     "override_ip_repr_encounter",
 ]

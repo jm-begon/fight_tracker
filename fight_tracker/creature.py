@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import warnings
 
 from .arithmetic import DescriptiveTrue
@@ -8,6 +10,8 @@ from .mechanics.conditions import Dead, Incapacitated, Unconscious
 from .mechanics.damage import Damage
 from .mechanics.speed import Speed
 from .rendering.misc import HPBar
+from .statblock import StatBlock
+from .typing import Intable
 from .util import Observable
 
 
@@ -69,6 +73,36 @@ class HpBox(Observable):
 
 
 class Creature(Concept, Observable):
+    @classmethod
+    def from_statblock(
+        cls,
+        statblock: StatBlock,
+        current_pv: Intable | None = None,
+        player_name: str | None = None,
+    ) -> Creature:
+        name = statblock.nickname if statblock.nickname else statblock.name
+        armor_class = statblock.armor_class
+        current_pv = current_pv if current_pv else statblock.max_hit_points
+        pv_max = statblock.max_hit_points
+        speed = statblock.speed
+
+        if player_name is None:
+            return cls(
+                name=name,
+                armor_class=armor_class,
+                current_pv=current_pv,
+                pv_max=pv_max,
+                speed=speed,
+            )
+        return PlayerCharacter(
+            player=player_name,
+            name=name,
+            armor_class=armor_class,
+            current_pv=current_pv,
+            pv_max=pv_max,
+            speed=speed,
+        )
+
     def __init__(self, name, armor_class, current_pv, pv_max=None, speed=30):
         super().__init__()
         self.name = name
@@ -271,4 +305,4 @@ class PlayerCharacter(Creature):
 
 
 class NPC(Creature):
-    pass  # TODO
+    pass
