@@ -15,6 +15,9 @@ class Condition(Concept):
     def can_take_action(self):
         return True
 
+    def can_concentrate(self):
+        return True
+
     def __hash__(self):
         return hash(self.__class__.__name__)
 
@@ -87,6 +90,9 @@ class Incapacitated(Condition):
         )
 
     def can_take_action(self):
+        return False
+
+    def can_concentrate(self):
         return False
 
 

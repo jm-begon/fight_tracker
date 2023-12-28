@@ -1,7 +1,11 @@
 # CHANGELOG
 
+## 0.0.3
+- Statblock-based `Creature`
+
 ## 0.0.2
 - Stat blocks
+
 ## 0.0.1
 
 - Create fight participants

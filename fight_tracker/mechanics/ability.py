@@ -43,7 +43,7 @@ class AbilityScore(BaseIntable):
         return self.modifier
 
     def __str__(self) -> str:
-        return f"{self.modifier} ({self.score} {self.ability.name})"
+        return f"{self.modifier:+d} ({self.score} {self.ability.name})"
 
     @classmethod
     def compute_modifier(cls, score: Intable) -> int:

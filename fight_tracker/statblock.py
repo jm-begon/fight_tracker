@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Collection, Mapping
+from typing import Collection, Mapping, cast
 
 from .dice import Dice
 from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
@@ -20,9 +20,7 @@ class Action:
 @dataclass
 class StatBlock:
     name: str
-    nickname: str | None = None
     proficency_bonus: int | None = None
-    level: int | None = None
     size: Size | None = None
     category: str | None = None
     alignment: Alignment | None = None
@@ -37,28 +35,131 @@ class StatBlock:
     charisma: Intable | None = None
     saving_throw_proficiencies: Collection[Ability] | None = None
     skill_proficiencies: Collection[Skill] | None = None
+    initiative_bonus: int | None = None
     passive_perception: int | None = None
-    senses: Collection[
-        str
-    ] | None = None  # https://www.dndbeyond.com/sources/basic-rules/monsters#Senses
+    # TODO # https://www.dndbeyond.com/sources/basic-rules/monsters#Senses
+    senses: Collection[str] | None = None
     languages: Collection[str] | None = None
     challenge_rating: str | None = None
     abilities: Mapping[str, str] | None = None
     actions: Collection[Action] | None = None
+    # immunities:  # condition or dmg types
+    # resistances: # condition or dmg types
 
-    @classmethod
-    def compute_armor_class(
-        cls, dice_sides: int, n_dices: int, cons_bonus: int
-    ) -> Intable:
-        return n_dices * Dice(dice_sides, rng="expectation") + n_dices * cons_bonus
+    def __post_init__(self):
+        if self.initiative_bonus is None and self.dexterity is not None:
+            self.initiative_bonus = AbilityScore.dexterity(self.dexterity).modifier
+
+        if self.proficency_bonus is None:
+            self.proficency_bonus = 0
+
+        self.saving_throw_proficiencies = self.saving_throw_proficiencies or set()
+        self.skill_proficiencies = self.skill_proficiencies or set()
+
+    @property
+    def strength_score(self) -> AbilityScore | None:
+        return AbilityScore.strength(self.strength) if self.strength else None
+
+    @property
+    def strength_saving_throw(self) -> SavingThrow | None:
+        pb = cast(
+            int,
+            self.proficency_bonus
+            if self.saving_throw_proficiencies
+            and Ability.STR in self.saving_throw_proficiencies
+            else 0,
+        )
+        return SavingThrow.strength(self.strength, pb) if self.strength else None
+
+    @property
+    def dexterity_score(self) -> AbilityScore | None:
+        return AbilityScore.dexterity(self.dexterity) if self.dexterity else None
+
+    @property
+    def dexterity_saving_throw(self) -> SavingThrow | None:
+        pb = cast(
+            int,
+            self.proficency_bonus
+            if self.saving_throw_proficiencies
+            and Ability.DEX in self.saving_throw_proficiencies
+            else 0,
+        )
+        return SavingThrow.dexterity(self.dexterity, pb) if self.dexterity else None
+
+    @property
+    def constitution_score(self) -> AbilityScore | None:
+        return (
+            AbilityScore.constitution(self.constitution) if self.constitution else None
+        )
+
+    @property
+    def constitution_saving_throw(self) -> SavingThrow | None:
+        pb = cast(
+            int,
+            self.proficency_bonus
+            if self.saving_throw_proficiencies
+            and Ability.CON in self.saving_throw_proficiencies
+            else 0,
+        )
+        return (
+            SavingThrow.constitution(self.constitution, pb)
+            if self.constitution
+            else None
+        )
+
+    @property
+    def intelligence_score(self) -> AbilityScore | None:
+        return (
+            AbilityScore.intelligence(self.intelligence) if self.intelligence else None
+        )
+
+    @property
+    def intelligence_saving_throw(self) -> SavingThrow | None:
+        pb = cast(
+            int,
+            self.proficency_bonus
+            if self.saving_throw_proficiencies
+            and Ability.INT in self.saving_throw_proficiencies
+            else 0,
+        )
+        return (
+            SavingThrow.intelligence(self.intelligence, pb)
+            if self.intelligence
+            else None
+        )
+
+    @property
+    def wisdom_score(self) -> AbilityScore | None:
+        return AbilityScore.wisdom(self.wisdom) if self.wisdom else None
+
+    @property
+    def wisdom_saving_throw(self) -> SavingThrow | None:
+        pb = cast(
+            int,
+            self.proficency_bonus
+            if self.saving_throw_proficiencies
+            and Ability.WIS in self.saving_throw_proficiencies
+            else 0,
+        )
+        return SavingThrow.wisdom(self.wisdom, pb) if self.wisdom else None
+
+    @property
+    def charisma_score(self) -> AbilityScore | None:
+        return AbilityScore.charisma(self.charisma) if self.charisma else None
+
+    @property
+    def charisma_saving_throw(self) -> SavingThrow | None:
+        pb = cast(
+            int,
+            self.proficency_bonus
+            if self.saving_throw_proficiencies
+            and Ability.CHA in self.saving_throw_proficiencies
+            else 0,
+        )
+        return SavingThrow.charisma(self.charisma, pb) if self.charisma else None
 
     def __render__(self):
-        if self.nickname is None:
-            title = self.name
-        else:
-            title = f"{self.nickname} ({self.name})"
-
-        card = Card(title)
+        card = Card(self.name)
 
         size_str = self.size.value.capitalize() if self.size else None
         info = " ".join([str(x) for x in [size_str, self.category] if x is not None])

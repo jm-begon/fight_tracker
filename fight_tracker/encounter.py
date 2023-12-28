@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from .creature import NPC, PlayerCharacter
+from dataclasses import dataclass
+from typing import cast
+
+from .creature import NPC, Creature, PlayerCharacter
 from .dice import D20, Roll
 from .events.event import (
     EncounterEnd,
@@ -11,27 +14,19 @@ from .events.event import (
 )
 from .mechanics.ability import Ability
 from .rendering.table import BoolCell, Table
+from .typing import Intable
 from .util import CircularQueue, Observable
 
 
-class Participant(object):
-    def __init__(self, creature, encounter, initiative):
-        super().__init__()
-        self.creature = creature
-        self.initiative = initiative
-        self.encounter = encounter
+@dataclass
+class Participant:
+    creature: Creature
+    encounter: Encounter
+    initiative: int
 
     @property
-    def name(self):
-        return self.creature.name
-
-    def __repr__(self):
-        return "{}({}, {}, {})".format(
-            self.__class__.__name__,
-            repr(self.creature),
-            repr(self.encounter),
-            repr(self.initiative),
-        )
+    def name(self) -> str:
+        return self.creature.nickname
 
 
 class Encounter(Observable):
@@ -44,7 +39,7 @@ class Encounter(Observable):
     def __repr__(self):
         return "{}()".format(self.__class__.__name__)
 
-    def add(self, creature, initiative=None):
+    def add(self, creature: Creature, initiative: Intable | None = None):
         if initiative is None:
             initiative = Roll(D20() + creature.initiative_bonus)
 
@@ -64,15 +59,15 @@ class Encounter(Observable):
     def get_next_participant(self):
         next_participant = None
         for j in range(1, len(self.queue) - 1):
-            next_participant = self.queue.peek(j)
-            if next_participant.creature.can_act():
+            next_participant: Participant = self.queue.peek(j)
+            if next_participant.creature.can_play():
                 break
             else:
                 next_participant = None
         return next_participant
 
     def next_turn(self):
-        participant = self.queue()
+        participant: Participant = self.queue()
         self.turn += 1
         turn_event = TurnEvent(participant, self)
 
@@ -81,7 +76,7 @@ class Encounter(Observable):
             self.turn = 0
             NewRound(self.round, self).notify()
 
-        if participant.creature.can_act():
+        if participant.creature.can_play():
             next_participant = self.get_next_participant()
             if next_participant is not None:
                 turn_event.add_next(next_participant).notify()
@@ -117,14 +112,15 @@ class Encounter(Observable):
         )
 
         for i, participant in enumerate(self.queue.list_in_order()):
+            participant = cast(Participant, participant)
             creature = participant.creature
             table.fill_cell(BoolCell(i == curr))
             table.fill_cell(participant.initiative)
             if isinstance(creature, PlayerCharacter):
-                table.fill_cell((creature, f"({creature.player})"))
+                table.fill_cell((creature, f"({creature.nickname})"))
             else:
-                table.fill_cell(creature)
-            table.fill_cell(creature.pv_box)
+                table.fill_cell((creature.nickname, "(", creature, ")"))
+            table.fill_cell(creature.hp_box)
             table.fill_cell(int(creature.armor_class))  # Remove description
             for ability in Ability:
                 save = participant.creature.saving_throws.get(ability)

@@ -15,10 +15,8 @@ def test_stream_render() -> None:
     sr = StreamRenderer(buffer)
 
     kobold = StatBlock(
-        name="Kobold Tracker",
-        nickname="Kb1",
+        name="Kb1 (Kobold Tracker)",
         proficency_bonus=2,
-        level=3,
         size=Size.SMALL,
         category="humanoid (kobold)",
         alignment=Alignment.LE,
@@ -131,7 +129,7 @@ def test_stream_render_small() -> None:
 | | Modifier | -   | -   | -   | -   | -   | -   |                             |
 | | Save     | -   | -   | -   | -   | -   | -   |                             |
 | +----------+-----+-----+-----+-----+-----+-----/                             |
-|                                                                              |
+| - Proficiency bonus: 0                                                       |
 +------------------------------------------------------------------------------/
 """
     given = sr.strip_formating(buffer.getvalue())
