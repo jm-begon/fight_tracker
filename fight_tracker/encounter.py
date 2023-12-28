@@ -116,18 +116,10 @@ class Encounter(Observable):
             creature = participant.creature
             table.fill_cell(BoolCell(i == curr))
             table.fill_cell(participant.initiative)
-            if isinstance(creature, PlayerCharacter):
-                table.fill_cell((creature, f"({creature.nickname})"))
-            else:
-                table.fill_cell((creature.nickname, "(", creature, ")"))
+            table.fill_cell((creature, f"({creature.nickname})"))
             table.fill_cell(creature.hp_box)
             table.fill_cell(int(creature.armor_class))  # Remove description
-            for ability in Ability:
-                save = participant.creature.saving_throws.get(ability)
-                if save is None:
-                    table.fill_cell("-")
-                else:
-                    table.fill_cell("{:+d}".format(int(save)))
+            creature.statblock.fill_saving_throw_table(table).new_column()
 
             table.fill_cell(BoolCell(creature.is_concentrating))
             table.fill_cell(list(participant.creature.list_conditions()))

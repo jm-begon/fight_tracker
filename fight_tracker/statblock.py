@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Collection, Mapping, cast
+from typing import Collection, Dict, Mapping, cast
 
 from .dice import Dice
 from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
@@ -158,6 +158,20 @@ class StatBlock:
         )
         return SavingThrow.charisma(self.charisma, pb) if self.charisma else None
 
+    def get_saving_throw(self, ability: Ability) -> SavingThrow | None:
+        return getattr(self, f"{ability.value}_saving_throw")
+
+    def get_ability_score(self, ability: Ability) -> AbilityScore | None:
+        return getattr(self, f"{ability.value}_score")
+
+    def get_ability_scores(self) -> Dict[Ability, AbilityScore]:
+        ans = {ability: self.get_ability_score(ability) for ability in Ability}
+        return {k: v for k, v in ans.items() if v is not None}
+
+    def get_saving_throws(self) -> Dict[Ability, SavingThrow]:
+        ans = {ability: self.get_saving_throw(ability) for ability in Ability}
+        return {k: v for k, v in ans.items() if v is not None}
+
     def __render__(self):
         card = Card(self.name)
 
@@ -221,41 +235,47 @@ class StatBlock:
 
         return card
 
+    def fill_ability_modifier_table(
+        self, table: Table, label: str | None = None
+    ) -> Table:
+        if label:
+            table.fill_cell(label)
+        scores = self.get_ability_scores()
+        for ability in Ability:
+            if ability in scores:
+                table.fill_cell(f"{int(scores[ability]):+d}")
+            else:
+                table.fill_cell("-")
+
+        table.delete_cell()
+        return table
+
+    def fill_saving_throw_table(self, table: Table, label: str | None = None) -> Table:
+        if label:
+            table.fill_cell(label)
+        saving_throw_proficiencies = self.saving_throw_proficiencies or set()
+        throws = self.get_saving_throws()
+        for ability in Ability:
+            if ability in throws:
+                table.fill_cell(f"{int(throws[ability]):+d}")
+            elif (
+                self.proficency_bonus is not None
+                and len(saving_throw_proficiencies) > 0
+            ):
+                table.fill_cell(BoolCell(ability in saving_throw_proficiencies))
+            else:
+                table.fill_cell("-")
+
+        table.delete_cell()
+        return table
+
     def _get_ability_table(self) -> Table:
         table = Table(header=True)
         table.fill_row(
             "",
             *[ability.name for ability in Ability],
         )
-        table.fill_cell("Modifier")
-        for ability in Ability:
-            score = getattr(self, ability.value, None)
-            if score is None:
-                table.fill_cell("-")
-            else:
-                table.fill_cell(f"{AbilityScore.compute_modifier(score):+d}")
-
-        table.delete_cell().new_row()
-
-        table.fill_cell("Save")
-        saving_throw_proficiencies = self.saving_throw_proficiencies or set()
-        for ability in Ability:
-            score = getattr(self, ability.value, None)
-            if score is None:
-                table.fill_cell("-")
-                continue
-            if self.proficency_bonus is None:
-                table.fill_cell(BoolCell(ability in saving_throw_proficiencies))
-            else:
-                value = AbilityScore.compute_modifier(score)
-                if ability in saving_throw_proficiencies:
-                    value += int(self.proficency_bonus)
-
-                table.fill_cell(f"{value:+d}")
-
-        table.delete_cell()
-
-        # TODO first row: ability modifiers
-        # TODO second row: + prof bonus for saving throws
+        self.fill_ability_modifier_table(table, "Modifier").new_row()
+        self.fill_saving_throw_table(table, "Save")
 
         return table

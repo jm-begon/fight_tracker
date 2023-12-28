@@ -91,7 +91,7 @@ class HpBox(Observable):
 
 class Creature(Concept, Observable):
     @classmethod
-    def quick_create(
+    def quick(
         cls,
         nickname: str,
         name: str,
