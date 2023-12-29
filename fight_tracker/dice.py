@@ -51,6 +51,10 @@ class RNG:
 
 
 class Dice(BaseIntable):
+    @classmethod
+    def expectation(cls, sides: int) -> Dice:
+        return cls(sides, rng="expectation")
+
     def __init__(self, sides, rng: RNGLike | None = None):
         self.sides = sides
         self.n_dices = 1

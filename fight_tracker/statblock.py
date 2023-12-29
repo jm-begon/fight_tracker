@@ -1,10 +1,13 @@
-import functools
+from __future__ import annotations
+
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Callable, Collection, Dict, Mapping, Self, cast
+from typing import Collection, Dict, Mapping, Self, cast
 
-from .dice import Dice
+from .arithmetic import DescriptiveInt
+from .dice import Dice, Roll
 from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
+from .mechanics.damage import DamageType
 from .mechanics.misc import Alignment, Size
 from .mechanics.speed import Speed
 from .rendering.card import Card, CardSeparator, Description
@@ -17,6 +20,46 @@ class Action:
     name: str
     description: str
     category: str | None = None
+
+    @classmethod
+    def multiattack(cls, how_many: int, which_attack: str | None = None) -> Action:
+        desc = f"This creature makes {how_many} attacks."
+        if which_attack:
+            desc = f"{desc[:-1]}; {which_attack}."
+
+        return cls("Multiattack", desc)
+
+    @classmethod
+    def melee_weapon_attack(
+        cls,
+        name: str,
+        hit_bonus: int,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+        reach: str | None = None,
+    ) -> Action:
+        # TODO damage string
+        damage_type_str = f" {damage_type.value}" if damage_type else ""
+        reach_str = "5 ft" if reach is None else reach
+        how_many_targets = 1 if how_many_targets is None else how_many_targets
+        desc = f"{hit_bonus:+d} to hit, reach {reach_str}, {how_many_targets} target(s). Hit {damage}{damage_type_str} damage."
+        return cls(name, desc, "Melee Weapon Attack")
+
+    @classmethod
+    def ranged_weapon_attack(
+        cls,
+        name: str,
+        hit_bonus: int,
+        range_str: str,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+    ) -> Action:
+        damage_type_str = f" {damage_type.value}" if damage_type else ""
+        how_many_targets = 1 if how_many_targets is None else how_many_targets
+        desc = f"{hit_bonus:+d} to hit, range {range_str}, {how_many_targets} target(s). Hit {damage}{damage_type_str} damage."
+        return cls(name, desc, "Ranged Weapon Attack")
 
 
 @dataclass
@@ -354,8 +397,14 @@ class StatBlockBuilder:
             self.stat_block.alignment = alignment
         return self
 
-    def set_armor_class(self, armor_class: Intable | None) -> Self:
+    def set_armor_class(
+        self,
+        armor_class: Intable | None,
+        description: str | None = None,
+    ) -> Self:
         if armor_class:
+            if description is not None:
+                armor_class = DescriptiveInt(armor_class, description)
             self.stat_block.armor_class = armor_class
         return self
 
@@ -493,8 +542,10 @@ class StatBlockBuilder:
         self.stat_block.skill_proficiencies = sp
         return self
 
-    def set_speed(self, speed: Speed | None) -> Self:
-        if speed:
+    def set_speed(self, speed: Speed | int | None) -> Self:
+        if speed is not None:
+            if not isinstance(speed, Speed):
+                speed = Speed(speed)
             self.stat_block.speed = speed
         return self
 
@@ -515,7 +566,7 @@ class StatBlockBuilder:
         if v is None:
             return
 
-        self.stat_block.speed = Speed(v)
+        self.set_speed(Speed(v))
 
     def set_size(self, size: Size | None):
         if size:
@@ -570,9 +621,15 @@ class StatBlockBuilder:
         return self
 
     def add_action(
-        self, name: str, description, str, category: str | None = None
+        self,
+        name: str,
+        description: str,
+        category: str | None = None,
     ) -> Self:
         return self.add_actions(Action(name, description, category))
+
+    def clone(self) -> StatBlockBuilder:
+        return deepcopy(self)
 
     def create(self) -> StatBlock:
         self.infer_armor_class()
@@ -581,4 +638,4 @@ class StatBlockBuilder:
         self.infer_passive_perception()
         self.infer_proficiency_bonus()
         self.infer_speed()
-        return deepcopy(self.stat_block)
+        return self.clone().stat_block

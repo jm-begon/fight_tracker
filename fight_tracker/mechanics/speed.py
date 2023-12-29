@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from copy import copy
 from enum import Enum
 
 
@@ -59,6 +62,11 @@ class Speed:
             speed = self.feet
         return f"{prefix}{speed} {self.unit.value}"
 
+    def as_unit(self, unit: Unit) -> Speed:
+        clone = copy(self)
+        clone.unit = unit
+        return clone
+
 
 class FlyingSpeed(Speed):
     @property
@@ -70,3 +78,22 @@ class SwimmingSpeed(Speed):
     @property
     def prefix(self):
         return "swim"
+
+
+class MultiSpeed(Speed):
+    def __init__(
+        self,
+        base_speed: Speed,
+        *other_speeds: Speed,
+    ) -> None:
+        super().__init__(base_speed, unit=base_speed.unit)
+        self.speeds = tuple([base_speed] + list(other_speeds))
+
+    def __str__(self):
+        return ", ".join(str(x) for x in self.speeds)
+
+    def as_unit(self, unit: Unit) -> Speed:
+        clone = copy(self)
+        speeds = [s.as_unit(unit) for s in self.speeds]
+        clone.speeds = tuple(speeds)
+        return clone

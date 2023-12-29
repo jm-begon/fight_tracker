@@ -34,14 +34,8 @@ class Renderer(object):
         ls = [self.dispatch(e) for e in tree]
         return self.concat([self.dispatch(tree.content), self.concat(ls)])
 
-    def r_speed(self, speed):
-        unit = speed.unit
-        try:
-            speed.unit = self.unit
-            s = str(speed)
-        finally:
-            speed.unit = unit
-        return s
+    def r_speed(self, speed: Speed):
+        return str(speed.as_unit(self.unit))
 
     def r_description(self, description: Description) -> str:
         raise NotImplementedError()

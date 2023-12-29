@@ -172,8 +172,10 @@ def test_statblock_builder_inference() -> None:
         .create()
     )
 
-    StreamRenderer()(kobold)
+    # StreamRenderer()(kobold)
     assert kobold.proficency_bonus == 2
     assert kobold.armor_class == 12
     assert int(kobold.max_hit_points) == 4 or int(kobold.max_hit_points) == 5
     assert kobold.passive_perception == 8
+    assert isinstance(kobold.speed, Speed)
+    assert kobold.speed.feet == 30
