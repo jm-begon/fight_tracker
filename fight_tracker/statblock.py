@@ -1,5 +1,7 @@
+import functools
+from copy import deepcopy
 from dataclasses import dataclass
-from typing import Collection, Dict, Mapping, cast
+from typing import Callable, Collection, Dict, Mapping, Self, cast
 
 from .dice import Dice
 from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
@@ -279,3 +281,304 @@ class StatBlock:
         self.fill_saving_throw_table(table, "Save")
 
         return table
+
+
+@dataclass
+class InferredInt:
+    value: int
+
+    def __int__(self) -> int:
+        return self.value
+
+
+class StatBlockBuilder:
+    def __init__(self, creature_name: str) -> None:
+        self.stat_block = StatBlock(
+            name=creature_name,
+            size=Size.MEDIUM,
+        )
+        self.level: int | None = None
+        self._hit_dice: Dice | None = None
+
+    def set_proficiency_bonus(self, proficiency_bonus: int | None) -> Self:
+        if proficiency_bonus:
+            self.stat_block.proficency_bonus = proficiency_bonus
+        return self
+
+    def infer_proficiency_bonus(self) -> None:
+        pb = self.stat_block.proficency_bonus
+        if pb is not None and pb != 0:
+            return
+        if self.level:
+            self.set_proficiency_bonus(2 + ((int(self.level) - 1) // 4))
+
+    def set_hit_dice(self, value: int | None) -> Self:
+        if value:
+            self._hit_dice = Dice(value, "expectation")
+        return self
+
+    @property
+    def hit_dice(self) -> Dice | None:
+        if self._hit_dice:
+            return self._hit_dice
+
+        v: int | None = None
+        size = self.stat_block.size
+        if size == Size.TINY:
+            v = 4
+        elif size == Size.SMALL:
+            v = 6
+        elif size == Size.MEDIUM:
+            v = 8
+        elif size == Size.LARGE:
+            v = 10
+        elif size == Size.HUGE:
+            v = 12
+        elif size == Size.GARGANTUAN:
+            v = 20
+
+        if v is None:
+            return None
+
+        return Dice(v, "expectation")
+
+    def set_type(self, category: str | None) -> Self:
+        if category:
+            self.stat_block.category = category
+        return self
+
+    set_category = set_type
+
+    def set_alignment(self, alignment: Alignment | None) -> Self:
+        if alignment:
+            self.stat_block.alignment = alignment
+        return self
+
+    def set_armor_class(self, armor_class: Intable | None) -> Self:
+        if armor_class:
+            self.stat_block.armor_class = armor_class
+        return self
+
+    def infer_armor_class(self) -> None:
+        if self.stat_block.armor_class:
+            return
+
+        dexterity_score = self.stat_block.dexterity_score
+        if dexterity_score:
+            self.stat_block.armor_class = 10 + dexterity_score.modifier
+
+    def set_max_hit_points(self, max_hit_points: Intable | None) -> Self:
+        if max_hit_points:
+            self.stat_block.max_hit_points = max_hit_points
+        return self
+
+    def infer_max_hit_points(self) -> None:
+        hp = self.stat_block.max_hit_points
+        if hp is not None:
+            return
+
+        if (
+            not self.level
+            or not self.stat_block.constitution_score
+            or not self.hit_dice
+        ):
+            return
+
+        self.set_max_hit_points(
+            self.level * self.hit_dice
+            + (self.level * self.stat_block.constitution_score.modifier)
+        )
+
+    def set_init_bonus(self, initiative_bonus: int | None) -> Self:
+        if initiative_bonus:
+            self.stat_block.initiative_bonus = initiative_bonus
+        return self
+
+    def infer_init_bonus(self) -> None:
+        if self.stat_block.initiative_bonus:
+            return
+        dexterity_score = self.stat_block.dexterity_score
+        if dexterity_score:
+            self.set_init_bonus(dexterity_score.modifier)
+
+    def set_passive_perception(self, passive_perception: int | None) -> Self:
+        if passive_perception:
+            self.stat_block.passive_perception = passive_perception
+        return self
+
+    def infer_passive_perception(self) -> None:
+        if self.stat_block.wisdom_score is None:
+            return
+
+        score = 10 + self.stat_block.wisdom_score.modifier
+
+        if (
+            self.stat_block.skill_proficiencies
+            and Skill.PERCEPTION in self.stat_block.skill_proficiencies
+        ):
+            pb = self.stat_block.proficency_bonus
+            score = score + (pb if pb is not None else 0)
+
+        self.stat_block.passive_perception = score
+
+    def set_ability_scores(
+        self,
+        strength: Intable | None = None,
+        dexterity: Intable | None = None,
+        constitution: Intable | None = None,
+        intelligence: Intable | None = None,
+        wisdom: Intable | None = None,
+        charisma: Intable | None = None,
+    ) -> Self:
+        if strength:
+            self.stat_block.strength = strength
+        if dexterity:
+            self.stat_block.dexterity = dexterity
+        if constitution:
+            self.stat_block.constitution = constitution
+        if intelligence:
+            self.stat_block.intelligence = intelligence
+        if wisdom:
+            self.stat_block.wisdom = wisdom
+        if charisma:
+            self.stat_block.charisma = charisma
+        return self
+
+    def set_saving_throw_proficiencies(
+        self,
+        strength: bool | None = None,
+        dexterity: bool | None = None,
+        constitution: bool | None = None,
+        intelligence: bool | None = None,
+        wisdom: bool | None = None,
+        charisma: bool | None = None,
+        *abilities: Ability,
+    ) -> Self:
+        if self.stat_block.saving_throw_proficiencies:
+            add_prof = set(self.stat_block.saving_throw_proficiencies)
+        else:
+            add_prof = set()
+
+        add_prof.update(abilities)
+
+        del_prof = set()
+
+        def manage(ability: Ability, to_add: bool | None):
+            if to_add is None:
+                return
+            if to_add:
+                add_prof.add(ability)
+            else:
+                del_prof.add(ability)
+
+        manage(Ability.STR, strength)
+        manage(Ability.DEX, dexterity)
+        manage(Ability.CON, constitution)
+        manage(Ability.INT, intelligence)
+        manage(Ability.WIS, wisdom)
+        manage(Ability.CHA, charisma)
+
+        prof = add_prof.difference(del_prof)
+        self.stat_block.saving_throw_proficiencies = prof
+
+        return self
+
+    def add_skill_proficiencies(self, *skills: Skill) -> Self:
+        if self.stat_block.skill_proficiencies is not None:
+            sp = set(self.stat_block.skill_proficiencies)
+        else:
+            sp = set()
+
+        sp.update(skills)
+        self.stat_block.skill_proficiencies = sp
+        return self
+
+    def set_speed(self, speed: Speed | None) -> Self:
+        if speed:
+            self.stat_block.speed = speed
+        return self
+
+    def infer_speed(self) -> None:
+        speed = self.stat_block.speed
+        if speed:
+            return
+
+        v: int | None = None
+        size = self.stat_block.size
+        if size in {Size.TINY, Size.SMALL}:
+            v = 20
+        elif size == Size.MEDIUM:
+            v = 30
+        elif size in {Size.LARGE, Size.HUGE, Size.GARGANTUAN}:
+            v = 40
+
+        if v is None:
+            return
+
+        self.stat_block.speed = Speed(v)
+
+    def set_size(self, size: Size | None):
+        if size:
+            self.stat_block.size = size
+        return self
+
+    def set_level(self, level: int | None) -> Self:
+        if level:
+            self.level = level
+        return self
+
+    def add_senses(self, *senses: str) -> Self:
+        if self.stat_block.senses:
+            curr_senses = list(self.stat_block.senses)
+        else:
+            curr_senses = []
+
+        curr_senses.extend(senses)
+        self.stat_block.senses = tuple(curr_senses)
+        return self
+
+    def add_languages(self, *languages: str) -> Self:
+        if self.stat_block.languages:
+            curr_lg = list(self.stat_block.languages)
+        else:
+            curr_lg = []
+
+        curr_lg.extend(languages)
+        self.stat_block.languages = tuple(curr_lg)
+        return self
+
+    def set_challenge_rating(self, cr: str | None) -> Self:
+        if cr:
+            self.stat_block.challenge_rating = cr
+        return self
+
+    def add_abilities(self, **abilities: str) -> Self:
+        curr_abilities = self.stat_block.abilities
+        if curr_abilities is not None:
+            abilities.update(curr_abilities)
+        self.stat_block.abilities = abilities
+        return self
+
+    def add_actions(self, *actions: Action) -> Self:
+        if self.stat_block.actions:
+            curr_actions = list(self.stat_block.actions)
+        else:
+            curr_actions = []
+
+        curr_actions.extend(actions)
+        self.stat_block.actions = tuple(curr_actions)
+        return self
+
+    def add_action(
+        self, name: str, description, str, category: str | None = None
+    ) -> Self:
+        return self.add_actions(Action(name, description, category))
+
+    def create(self) -> StatBlock:
+        self.infer_armor_class()
+        self.infer_init_bonus()
+        self.infer_max_hit_points()
+        self.infer_passive_perception()
+        self.infer_proficiency_bonus()
+        self.infer_speed()
+        return deepcopy(self.stat_block)
