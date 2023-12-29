@@ -2,6 +2,7 @@
 
 ## 0.0.3
 - Statblock-based `Creature`
+- `StatBlockBuilder`
 
 ## 0.0.2
 - Stat blocks
