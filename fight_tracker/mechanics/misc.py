@@ -2,9 +2,12 @@ from enum import Enum
 
 
 class Size(Enum):
+    TINY = "tiny"
     SMALL = "small"
     MEDIUM = "medium"
     LARGE = "large"
+    HUGE = "huge"
+    GARGANTUAN = "gargantuan"
 
 
 class Alignment(Enum):

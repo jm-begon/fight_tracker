@@ -7,7 +7,7 @@ from fight_tracker.mechanics.ability import Ability
 from fight_tracker.mechanics.misc import Alignment, Size
 from fight_tracker.mechanics.speed import Speed
 from fight_tracker.rendering import StreamRenderer
-from fight_tracker.statblock import Action, StatBlock
+from fight_tracker.statblock import Action, StatBlock, StatBlockBuilder
 
 
 def test_stream_render() -> None:
@@ -15,10 +15,8 @@ def test_stream_render() -> None:
     sr = StreamRenderer(buffer)
 
     kobold = StatBlock(
-        name="Kobold Tracker",
-        nickname="Kb1",
+        name="Kb1 (Kobold Tracker)",
         proficency_bonus=2,
-        level=3,
         size=Size.SMALL,
         category="humanoid (kobold)",
         alignment=Alignment.LE,
@@ -131,8 +129,51 @@ def test_stream_render_small() -> None:
 | | Modifier | -   | -   | -   | -   | -   | -   |                             |
 | | Save     | -   | -   | -   | -   | -   | -   |                             |
 | +----------+-----+-----+-----+-----+-----+-----/                             |
-|                                                                              |
+| - Proficiency bonus: 0                                                       |
 +------------------------------------------------------------------------------/
 """
     given = sr.strip_formating(buffer.getvalue())
     assert given == expected
+
+
+def test_statblock_builder_inference() -> None:
+    kobold = (
+        StatBlockBuilder("Kobold")
+        .set_ability_scores(
+            strength=7,
+            dexterity=15,
+            constitution=9,
+            intelligence=8,
+            wisdom=7,
+            charisma=8,
+        )
+        .set_level(2)
+        .set_size(Size.SMALL)
+        .set_speed(30)
+        .set_challenge_rating("1/8")
+        .add_senses("Darkvision 60 ft.")
+        .add_languages("Common", "Draconic")
+        .add_abilities(
+            **{
+                "Sunlight Sensitivity": "While in sunlight, the kobold tracker has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.",
+                "Pack Tactics": "The kobold tracker has advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally isn't incapacitated.",
+            },
+        )
+        .add_action(
+            "Dagger",
+            "+4 to hit, range 30/120 ft., one target. Hit: 4 (1d4 + 2) bludgeoning damage.",
+            "Ranged Weapon Attack",
+        )
+        .add_action(
+            "Sling",
+            "+4 to hit, range 30/120 ft., one target. Hit: 4 (1d4 + 2) bludgeoning damage.",
+            "Ranged Weapon Attack",
+        )
+        .create()
+    )
+
+    StreamRenderer()(kobold)
+    assert kobold.proficency_bonus == 2
+    assert kobold.armor_class == 12
+    assert int(kobold.max_hit_points) == 4 or int(kobold.max_hit_points) == 5
+    assert kobold.passive_perception == 8
