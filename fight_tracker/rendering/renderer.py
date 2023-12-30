@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from ..concept import Concept
-from ..mechanics.speed import Speed, Unit
+from ..mechanics.speed import Distance, Unit
 from .card import Card, Description
 from .misc import HPBar
 from .table import BoolCell, Table
@@ -34,8 +34,8 @@ class Renderer(object):
         ls = [self.dispatch(e) for e in tree]
         return self.concat([self.dispatch(tree.content), self.concat(ls)])
 
-    def r_speed(self, speed: Speed):
-        return str(speed.as_unit(self.unit))
+    def r_speed(self, dist: Distance):
+        return str(dist.as_unit(self.unit))
 
     def r_description(self, description: Description) -> str:
         raise NotImplementedError()
@@ -62,7 +62,7 @@ class Renderer(object):
             return self.r_hp_bar(obj)
         elif isinstance(obj, Tree):
             return self.r_tree(obj)
-        elif isinstance(obj, Speed):
+        elif isinstance(obj, Distance):
             return self.r_speed(obj)
         elif isinstance(obj, Card):
             return self.r_card(obj)

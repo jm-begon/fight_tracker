@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Collection, Dict, Mapping, Self, cast
+from typing import Any, Collection, Dict, Self, cast
 
 from .arithmetic import DescriptiveInt
 from .dice import Dice, Roll
@@ -10,7 +10,7 @@ from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
 from .mechanics.damage import DamageType
 from .mechanics.misc import Alignment, Size
 from .mechanics.race import Race
-from .mechanics.speed import Speed
+from .mechanics.speed import Distance, Range, Speed, Unit
 from .rendering.card import Card, CardSeparator, Description
 from .rendering.table import BoolCell, Table
 from .typing import Intable
@@ -19,7 +19,7 @@ from .typing import Intable
 @dataclass
 class Action:
     name: str
-    description: str
+    description: str | Any  # Any renderable
     category: str | None = None
 
     @classmethod
@@ -38,13 +38,18 @@ class Action:
         damage: Intable,
         damage_type: DamageType | None = None,
         how_many_targets: int | None = None,
-        reach: str | None = None,
+        reach: Distance | None = None,
     ) -> Action:
         # TODO damage string
         damage_type_str = f" {damage_type.value}" if damage_type else ""
-        reach_str = "5 ft" if reach is None else reach
+        if reach is None:
+            reach = Distance(5)
         how_many_targets = 1 if how_many_targets is None else how_many_targets
-        desc = f"{hit_bonus:+d} to hit, reach {reach_str}, {how_many_targets} target(s). Hit {damage}{damage_type_str} damage."
+        desc = [
+            f"{hit_bonus:+d} to hit, reach",
+            reach,
+            f", {how_many_targets} target(s). Hit {damage}{damage_type_str} damage.",
+        ]
         return cls(name, desc, "Melee Weapon Attack")
 
     @classmethod
@@ -52,14 +57,18 @@ class Action:
         cls,
         name: str,
         hit_bonus: int,
-        range_str: str,
+        range: Range,
         damage: Intable,
         damage_type: DamageType | None = None,
         how_many_targets: int | None = None,
     ) -> Action:
         damage_type_str = f" {damage_type.value}" if damage_type else ""
         how_many_targets = 1 if how_many_targets is None else how_many_targets
-        desc = f"{hit_bonus:+d} to hit, range {range_str}, {how_many_targets} target(s). Hit {damage}{damage_type_str} damage."
+        desc = [
+            f"{hit_bonus:+d} to hit, range",
+            range,
+            f", {how_many_targets} target(s). Hit {damage}{damage_type_str} damage.",
+        ]
         return cls(name, desc, "Ranged Weapon Attack")
 
 
@@ -297,9 +306,10 @@ class StatBlock:
         if self.actions:
             action_descr = Description()
             for action in self.actions:
-                descr = action.description
+                descr = []
                 if action.category:
-                    descr = f"{action.category}: {descr}"
+                    descr.append(action.category)
+                descr.append(action.description)
                 action_descr.add_item(action.name, descr)
 
             card.add(CardSeparator("Action"), action_descr)

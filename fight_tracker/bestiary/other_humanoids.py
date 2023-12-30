@@ -1,6 +1,6 @@
 from ..arithmetic import DescriptiveInt
 from ..dice import Dice, Roll
-from ..mechanics import Skill, race
+from ..mechanics import Range, Skill, race
 from ..mechanics.damage import DamageType
 from ..statblock import Action, PassiveAbility, StatBlock, StatBlockBuilder
 
@@ -38,7 +38,7 @@ _thug_builder = (
         Action.ranged_weapon_attack(
             "Heavy Crossbow",
             2,
-            "100/400 ft",
+            Range(100, 400),
             Roll.outcome(Dice.expectation(10)),
             DamageType.PIERCING,
         ),
