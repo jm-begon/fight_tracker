@@ -46,13 +46,15 @@ class Distance:
         return self.unit.feet2squares(self.in_feet)
 
     @property
-    def in_unit(self) -> float:
+    def in_unit(self) -> float | int:
         if self.unit == Unit.SQUARES:
             dist = self.square_grid
         elif self.unit == Unit.METERS:
             dist = self.meters
         else:
             dist = self.feet
+        if isinstance(dist, int) or dist.is_integer():
+            dist = int(dist)
         return dist
 
     def __str__(self):

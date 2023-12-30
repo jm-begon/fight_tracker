@@ -93,7 +93,8 @@ class StreamRenderer(Renderer):
             tmp.append(self.dispatch(description.name))
 
         for key, value in description:
-            tmp.append(f"- \033[1m{key}\033[0m: {self.dispatch(value)}")
+            dispatched_value = self.dispatch(value)
+            tmp.append(f"- \033[1m{key}\033[0m: {dispatched_value}")
 
         return os.linesep.join(tmp)
 

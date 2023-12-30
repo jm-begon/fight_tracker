@@ -10,6 +10,7 @@ from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
 from .mechanics.damage import DamageType
 from .mechanics.misc import Alignment, Size
 from .mechanics.race import Race
+from .mechanics.sense import Sense
 from .mechanics.speed import Distance, Range, Speed, Unit
 from .rendering.card import Card, CardSeparator, Description
 from .rendering.table import BoolCell, Table
@@ -201,7 +202,7 @@ class StatBlock:
     initiative_bonus: int | None = None
     passive_perception: int | None = None
     # TODO # https://www.dndbeyond.com/sources/basic-rules/monsters#Senses
-    senses: Collection[str] | None = None
+    senses: Collection[Sense] | None = None
     languages: Collection[str] | None = None
     challenge_rating: str | None = None
     abilities: Collection[PassiveAbility] | None = None
@@ -697,7 +698,7 @@ class StatBlockBuilder:
             self.level = level
         return self
 
-    def add_senses(self, *senses: str) -> Self:
+    def add_senses(self, *senses: Sense) -> Self:
         if self.stat_block.senses:
             curr_senses = list(self.stat_block.senses)
         else:
