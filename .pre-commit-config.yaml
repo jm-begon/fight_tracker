@@ -25,3 +25,4 @@ repos:
     hooks:
     -   id: mypy
         args: [--install-types]
+        additional_dependencies: [pytest==7.4.1]

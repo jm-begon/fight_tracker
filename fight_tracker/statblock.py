@@ -1,12 +1,16 @@
-import functools
+from __future__ import annotations
+
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Callable, Collection, Dict, Mapping, Self, cast
+from typing import Any, Collection, Dict, Self, cast
 
-from .dice import Dice
+from .arithmetic import DescriptiveInt
+from .dice import Dice, Roll
 from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
+from .mechanics.damage import DamageType
 from .mechanics.misc import Alignment, Size
-from .mechanics.speed import Speed
+from .mechanics.race import Race
+from .mechanics.speed import Distance, Range, Speed, Unit
 from .rendering.card import Card, CardSeparator, Description
 from .rendering.table import BoolCell, Table
 from .typing import Intable
@@ -15,8 +19,165 @@ from .typing import Intable
 @dataclass
 class Action:
     name: str
-    description: str
+    description: str | Any  # Any renderable
     category: str | None = None
+
+    @classmethod
+    def multiattack(cls, how_many: int, which_attack: str | None = None) -> Action:
+        desc = f"This creature makes {how_many} attacks."
+        if which_attack:
+            desc = f"{desc[:-1]}; {which_attack}."
+
+        return cls("Multiattack", desc)
+
+    @classmethod
+    def melee_attack(
+        cls,
+        category: str,
+        name: str,
+        hit_bonus: int,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+        reach: Distance | None = None,
+    ) -> Action:
+        damage_type_str = f" {damage_type.value}" if damage_type else ""
+        if reach is None:
+            reach = Distance(5)
+        how_many_targets = 1 if how_many_targets is None else how_many_targets
+        desc = [
+            f"{hit_bonus:+d} to hit, reach",
+            reach,
+            f", {how_many_targets} target(s). Hit {damage}{damage_type_str} damage.",
+        ]
+        return cls(name, desc, category)
+
+    @classmethod
+    def melee_weapon_attack(
+        cls,
+        name: str,
+        hit_bonus: int,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+        reach: Distance | None = None,
+    ) -> Action:
+        return cls.melee_attack(
+            "Melee Weapon Attack",
+            name=name,
+            hit_bonus=hit_bonus,
+            damage=damage,
+            damage_type=damage_type,
+            how_many_targets=how_many_targets,
+            reach=reach,
+        )
+
+    @classmethod
+    def melee_spell_attack(
+        cls,
+        name: str,
+        hit_bonus: int,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+        reach: Distance | None = None,
+    ) -> Action:
+        return cls.melee_attack(
+            "Melee Spell Attack",
+            name=name,
+            hit_bonus=hit_bonus,
+            damage=damage,
+            damage_type=damage_type,
+            how_many_targets=how_many_targets,
+            reach=reach,
+        )
+
+    @classmethod
+    def range_attack(
+        cls,
+        category: str,
+        name: str,
+        hit_bonus: int,
+        range: Range,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+    ) -> Action:
+        damage_type_str = f" {damage_type.value}" if damage_type else ""
+        how_many_targets = 1 if how_many_targets is None else how_many_targets
+        desc = [
+            f"{hit_bonus:+d} to hit, range",
+            range,
+            f", {how_many_targets} target(s). Hit {damage}{damage_type_str} damage.",
+        ]
+        return cls(name, desc, category)
+
+    @classmethod
+    def ranged_weapon_attack(
+        cls,
+        name: str,
+        hit_bonus: int,
+        range: Range,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+    ) -> Action:
+        return cls.range_attack(
+            "Range Weapon Attack",
+            name=name,
+            hit_bonus=hit_bonus,
+            range=range,
+            damage=damage,
+            damage_type=damage_type,
+            how_many_targets=how_many_targets,
+        )
+
+    @classmethod
+    def ranged_spell_attack(
+        cls,
+        name: str,
+        hit_bonus: int,
+        range: Range,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+    ) -> Action:
+        return cls.range_attack(
+            "Range Spell Attack",
+            name=name,
+            hit_bonus=hit_bonus,
+            range=range,
+            damage=damage,
+            damage_type=damage_type,
+            how_many_targets=how_many_targets,
+        )
+
+
+@dataclass
+class PassiveAbility:
+    name: str
+    effect: str
+
+    @classmethod
+    def pack_tactics(cls) -> PassiveAbility:
+        return cls(
+            "Pack Tactics",
+            "This creature has advantage on an attack roll against an opponent if at least one of the his allies is within 5 feet of the opponent and the ally isn't incapacitated.",
+        )
+
+    @classmethod
+    def sunlight_sensitivity(cls) -> PassiveAbility:
+        return cls(
+            "Sunlight Sensitivity",
+            "While in sunlight, this creature has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.",
+        )
+
+    @classmethod
+    def keen_smell(cls) -> PassiveAbility:
+        return cls(
+            "Keen Smell",
+            "This creature has advantage on Wisdom (Perception) checks that rely on smell.",
+        )
 
 
 @dataclass
@@ -43,7 +204,7 @@ class StatBlock:
     senses: Collection[str] | None = None
     languages: Collection[str] | None = None
     challenge_rating: str | None = None
-    abilities: Mapping[str, str] | None = None
+    abilities: Collection[PassiveAbility] | None = None
     actions: Collection[Action] | None = None
     # immunities:  # condition or dmg types
     # resistances: # condition or dmg types
@@ -219,16 +380,17 @@ class StatBlock:
         )
         if self.abilities:
             ability_descr = Description()
-            for name, descr in self.abilities.items():
-                ability_descr.add_item(name, descr)
+            for ability in self.abilities:
+                ability_descr.add_item(ability.name, ability.effect)
             card.add(CardSeparator(), ability_descr)
 
         if self.actions:
             action_descr = Description()
             for action in self.actions:
-                descr = action.description
+                descr = []
                 if action.category:
-                    descr = f"{action.category}: {descr}"
+                    descr.append(f"{action.category}:")
+                descr.append(action.description)
                 action_descr.add_item(action.name, descr)
 
             card.add(CardSeparator("Action"), action_descr)
@@ -354,8 +516,14 @@ class StatBlockBuilder:
             self.stat_block.alignment = alignment
         return self
 
-    def set_armor_class(self, armor_class: Intable | None) -> Self:
+    def set_armor_class(
+        self,
+        armor_class: Intable | None,
+        description: str | None = None,
+    ) -> Self:
         if armor_class:
+            if description is not None:
+                armor_class = DescriptiveInt(armor_class, description)
             self.stat_block.armor_class = armor_class
         return self
 
@@ -493,8 +661,10 @@ class StatBlockBuilder:
         self.stat_block.skill_proficiencies = sp
         return self
 
-    def set_speed(self, speed: Speed | None) -> Self:
-        if speed:
+    def set_speed(self, speed: Speed | int | None) -> Self:
+        if speed is not None:
+            if not isinstance(speed, Speed):
+                speed = Speed(speed)
             self.stat_block.speed = speed
         return self
 
@@ -515,7 +685,7 @@ class StatBlockBuilder:
         if v is None:
             return
 
-        self.stat_block.speed = Speed(v)
+        self.set_speed(Speed(v))
 
     def set_size(self, size: Size | None):
         if size:
@@ -552,11 +722,18 @@ class StatBlockBuilder:
             self.stat_block.challenge_rating = cr
         return self
 
-    def add_abilities(self, **abilities: str) -> Self:
+    def add_abilities(self, *args: PassiveAbility, **kwargs: str) -> Self:
         curr_abilities = self.stat_block.abilities
-        if curr_abilities is not None:
-            abilities.update(curr_abilities)
-        self.stat_block.abilities = abilities
+        if curr_abilities:
+            curr_abilities = list(curr_abilities)
+        else:
+            curr_abilities = []
+
+        curr_abilities.extend(args)
+        curr_abilities.extend(
+            PassiveAbility(key, value) for key, value in kwargs.items()
+        )
+        self.stat_block.abilities = tuple(curr_abilities)
         return self
 
     def add_actions(self, *actions: Action) -> Self:
@@ -570,9 +747,24 @@ class StatBlockBuilder:
         return self
 
     def add_action(
-        self, name: str, description, str, category: str | None = None
+        self,
+        name: str,
+        description: str,
+        category: str | None = None,
     ) -> Self:
         return self.add_actions(Action(name, description, category))
+
+    def apply_racial_traits(
+        self,
+        race: Race,
+    ) -> Self:
+        self.set_size(race.size)
+        self.set_type(race.type)
+        self.set_speed(race.speed)
+        return self
+
+    def clone(self) -> StatBlockBuilder:
+        return deepcopy(self)
 
     def create(self) -> StatBlock:
         self.infer_armor_class()
@@ -581,4 +773,4 @@ class StatBlockBuilder:
         self.infer_passive_perception()
         self.infer_proficiency_bonus()
         self.infer_speed()
-        return deepcopy(self.stat_block)
+        return self.clone().stat_block

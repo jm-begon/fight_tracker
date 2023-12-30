@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.0.4
+- Bestiary:
+  * Kobolds
+
 ## 0.0.3
 - Statblock-based `Creature`
 - `StatBlockBuilder`

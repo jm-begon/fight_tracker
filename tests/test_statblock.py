@@ -7,7 +7,7 @@ from fight_tracker.mechanics.ability import Ability
 from fight_tracker.mechanics.misc import Alignment, Size
 from fight_tracker.mechanics.speed import Speed
 from fight_tracker.rendering import StreamRenderer
-from fight_tracker.statblock import Action, StatBlock, StatBlockBuilder
+from fight_tracker.statblock import Action, PassiveAbility, StatBlock, StatBlockBuilder
 
 
 def test_stream_render() -> None:
@@ -35,12 +35,24 @@ def test_stream_render() -> None:
         senses=("Darkvision 60ft",),
         languages=("Common", "Draconic"),
         challenge_rating="1/2",
-        abilities={
-            "Sunlight Sensitivity": "While in sunlight, the kobold tracker has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.",
-            "Pack Tactics": "The kobold tracker has advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally isn't incapacitated.",
-            "Keen Smell": "The kobold tracker has advantage on Wisdom (Perception) checks that rely on smell.",
-            "Infravision": "The kobold tracker can see in both magical and non-magical darkness as if it were bright light up to a distance of 60 feet.",
-        },
+        abilities=[
+            PassiveAbility(
+                "Sunlight Sensitivity",
+                "While in sunlight, the kobold tracker has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.",
+            ),
+            PassiveAbility(
+                "Pack Tactics",
+                "The kobold tracker has advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally isn't incapacitated.",
+            ),
+            PassiveAbility(
+                "Keen Smell",
+                "The kobold tracker has advantage on Wisdom (Perception) checks that rely on smell.",
+            ),
+            PassiveAbility(
+                "Infravision",
+                "The kobold tracker can see in both magical and non-magical darkness as if it were bright light up to a distance of 60 feet.",
+            ),
+        ],
         actions=(
             Action(
                 "Shortsword",
@@ -67,7 +79,7 @@ def test_stream_render() -> None:
 | Small humanoid (kobold), lawful evil                                         |
 | ---------------------------------------------------------------------------- |
 | - Armor Class: 13 (natural armor)                                            |
-| - Hit points: 12 (3d6 + 3)                                                   |
+| - Hit points: 13 (3d6 + 3)                                                   |
 | - Speed: 6.0 sq                                                              |
 | /----------+-----+-----+-----+-----+-----+-----+                             |
 | |          | STR | DEX | CON | INT | WIS | CHA |                             |
@@ -172,8 +184,10 @@ def test_statblock_builder_inference() -> None:
         .create()
     )
 
-    StreamRenderer()(kobold)
+    # StreamRenderer()(kobold)
     assert kobold.proficency_bonus == 2
     assert kobold.armor_class == 12
     assert int(kobold.max_hit_points) == 4 or int(kobold.max_hit_points) == 5
     assert kobold.passive_perception == 8
+    assert isinstance(kobold.speed, Speed)
+    assert kobold.speed.feet == 30

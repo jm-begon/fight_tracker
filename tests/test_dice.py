@@ -1,8 +1,9 @@
 from collections import defaultdict
+from typing import Dict
 
 import pytest
 
-from fight_tracker.dice import Dice
+from fight_tracker.dice import Dice, Roll
 
 
 def test_dice_str() -> None:
@@ -15,7 +16,7 @@ def test_dice_str() -> None:
 def test_dice_int(n_sides: int) -> None:
     N_TESTS = 1000
 
-    hist = defaultdict(int)
+    hist: Dict[int, int] = defaultdict(int)
     dice = Dice(n_sides)
 
     for _ in range(N_TESTS):
@@ -25,3 +26,10 @@ def test_dice_int(n_sides: int) -> None:
 
     for c in hist.values():
         assert c == pytest.approx(N_TESTS / n_sides, rel=0.5)
+
+
+def test_roll() -> None:
+    x = 2 * Dice.expectation(6) + 2
+
+    given = Roll.outcome(x)
+    assert str(given) == "9 (2d6 + 2)"

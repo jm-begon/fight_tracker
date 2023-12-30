@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+from copy import copy
 from enum import Enum
 
 
@@ -19,16 +22,16 @@ class Unit(Enum):
         return meters / 0.3048
 
 
-class Speed:
-    def __init__(self, speed, unit=Unit.FEET):
+class Distance:
+    def __init__(self, distance: float, unit: Unit = Unit.FEET):
         self.unit = unit
 
         if unit == Unit.METERS:
-            speed = unit.meters2feet(speed)
+            distance = unit.meters2feet(distance)
         elif unit == Unit.SQUARES:
-            speed = unit.squares2feet(speed)
+            distance = unit.squares2feet(distance)
 
-        self.in_feet = speed
+        self.in_feet = distance
 
     @property
     def feet(self):
@@ -43,6 +46,29 @@ class Speed:
         return self.unit.feet2squares(self.in_feet)
 
     @property
+    def in_unit(self) -> float:
+        if self.unit == Unit.SQUARES:
+            dist = self.square_grid
+        elif self.unit == Unit.METERS:
+            dist = self.meters
+        else:
+            dist = self.feet
+        return dist
+
+    def __str__(self):
+        return f"{self.in_unit} {self.unit.value}"
+
+    def as_unit(self, unit: Unit):
+        clone = copy(self)
+        clone.unit = unit
+        return clone
+
+
+class Speed(Distance):
+    def __init__(self, speed, unit=Unit.FEET):
+        super().__init__(speed, unit)
+
+    @property
     def prefix(self):
         return ""
 
@@ -51,13 +77,7 @@ class Speed:
         if len(prefix) > 0:
             prefix += " "
 
-        if self.unit == Unit.SQUARES:
-            speed = self.square_grid
-        elif self.unit == Unit.METERS:
-            speed = self.meters
-        else:
-            speed = self.feet
-        return f"{prefix}{speed} {self.unit.value}"
+        return f"{prefix}{super().__str__()}"
 
 
 class FlyingSpeed(Speed):
@@ -70,3 +90,47 @@ class SwimmingSpeed(Speed):
     @property
     def prefix(self):
         return "swim"
+
+
+class MultiSpeed(Speed):
+    def __init__(
+        self,
+        base_speed: Speed,
+        *other_speeds: Speed,
+    ) -> None:
+        super().__init__(base_speed, unit=base_speed.unit)
+        self.speeds = tuple([base_speed] + list(other_speeds))
+
+    def __str__(self):
+        return ", ".join(str(x) for x in self.speeds)
+
+    def as_unit(self, unit: Unit):
+        clone = copy(self)
+        speeds = [s.as_unit(unit) for s in self.speeds]
+        clone.speeds = tuple(speeds)
+        return clone
+
+
+class Range(Distance):
+    def __init__(
+        self,
+        short_range,
+        long_range: float | None = None,
+        unit=Unit.FEET,
+    ):
+        super().__init__(short_range, unit)
+        if long_range is None:
+            self.long_range: Distance | None = None
+        else:
+            self.long_range = Distance(long_range, unit)
+
+    def as_unit(self, unit: Unit):
+        clone = super().as_unit(unit)
+        if self.long_range:
+            clone.long_range = self.long_range.as_unit(unit)
+        return clone
+
+    def __str__(self):
+        if self.long_range is None:
+            return super().__str__()
+        return f"{self.in_unit}/{self.long_range.in_unit} {self.unit.value}"

@@ -13,7 +13,7 @@ RNGLike = Union[int, Literal["expectation"], "BaseDrawer"]
 
 class BaseDrawer:
     @abstractmethod
-    def draw(self, maximum_value: int) -> int:
+    def draw(self, maximum_value: int, sum_n: int = 1) -> int:
         raise NotImplementedError()
 
 
@@ -21,13 +21,13 @@ class Drawer(BaseDrawer):
     def __init__(self, seed: int | None = None) -> None:
         self.gen = Random(seed)
 
-    def draw(self, maximum_value: int) -> int:
-        return self.gen.randint(1, maximum_value)
+    def draw(self, maximum_value: int, sum_n: int = 1) -> int:
+        return sum(self.gen.randint(1, maximum_value) for _ in range(sum_n))
 
 
 class Expectation(BaseDrawer):
-    def draw(self, maximum_value: int) -> int:
-        return (maximum_value + 1) // 2
+    def draw(self, maximum_value: int, sum_n: int = 1) -> int:
+        return (sum_n * (maximum_value + 1)) // 2
 
 
 class RNG:
@@ -51,16 +51,17 @@ class RNG:
 
 
 class Dice(BaseIntable):
+    @classmethod
+    def expectation(cls, sides: int) -> Dice:
+        return cls(sides, rng="expectation")
+
     def __init__(self, sides, rng: RNGLike | None = None):
         self.sides = sides
         self.n_dices = 1
         self.rng = RNG.get(rng)
 
     def __int__(self):
-        ans = 0
-        for _ in range(self.n_dices):
-            ans += self.rng.draw(self.sides)
-        return ans
+        return self.rng.draw(self.sides, self.n_dices)
 
     def __repr__(self):
         return f"{self.__class__.__name__}({repr(self.sides)}, " f"{repr(self.rng)})"
@@ -93,6 +94,12 @@ class D20(Dice):
 
 
 class Roll(BaseIntable):
+    @classmethod
+    def outcome(cls, decorated: Intable) -> Roll:
+        __o = cls(decorated)
+        int(__o)
+        return __o
+
     def __init__(self, decorated):
         self.decorated = decorated
         self.value = None
