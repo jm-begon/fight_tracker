@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Collection, Dict, Self, cast
+from typing import Any, Collection, Dict, List, Self, Sequence, cast
 
 from .arithmetic import DescriptiveInt
 from .dice import Dice, Roll
@@ -364,13 +364,24 @@ class StatBlock:
 
         ability_table = self._get_ability_table()
 
+        if self.senses:
+            sense_list = list(self.senses)
+        else:
+            sense_list = []
+        if self.passive_perception:
+            sense_list.append(f"Passive perception {self.passive_perception}")
+        if len(sense_list) > 0:
+            sense_list = self.add_separator(sense_list)
+        else:
+            sense_list = None  # remove line
+
         card.add(
             ability_table,
             Description().add_item("Proficiency bonus", self.proficency_bonus)
             # TODO Damage resistances
             # TODO Damage immunities
             # TODO Condition immunities
-            .add_item("Sense", list(self.senses) if self.senses is not None else None)
+            .add_item("Senses", sense_list)
             .add_item(
                 "Languages",
                 ", ".join(str(lg) for lg in self.languages)
@@ -444,6 +455,14 @@ class StatBlock:
         self.fill_saving_throw_table(table, "Save")
 
         return table
+
+    def add_separator(self, ls: Sequence, sep: str = "/") -> List:
+        if len(ls) < 2:
+            return list(ls)
+        res: List[Any] = [None] * (2 * len(ls) - 1)
+        res[::2] = ls
+        res[1::2] = [sep] * (len(ls) - 1)
+        return res
 
 
 @dataclass

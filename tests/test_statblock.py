@@ -89,7 +89,7 @@ def test_stream_render() -> None:
 | | Save     | -2  | +2  | -1  | -1  | +0  | -1  |                             |
 | +----------+-----+-----+-----+-----+-----+-----/                             |
 | - Proficiency bonus: 2                                                       |
-| - Sense: Darkvision 12 sq                                                    |
+| - Senses: Darkvision 12 sq / Passive perception 12                           |
 | - Languages: Common, Draconic                                                |
 | - Challenge rating: 1/2                                                      |
 | ---------------------------------------------------------------------------- |
