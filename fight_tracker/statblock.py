@@ -9,6 +9,7 @@ from .dice import Dice, Roll
 from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
 from .mechanics.damage import DamageType
 from .mechanics.misc import Alignment, Size
+from .mechanics.race import Race
 from .mechanics.speed import Speed
 from .rendering.card import Card, CardSeparator, Description
 from .rendering.table import BoolCell, Table
@@ -63,6 +64,33 @@ class Action:
 
 
 @dataclass
+class PassiveAbility:
+    name: str
+    effect: str
+
+    @classmethod
+    def pack_tactics(cls) -> PassiveAbility:
+        return cls(
+            "Pack Tactics",
+            "This creature has advantage on an attack roll against an opponent if at least one of the his allies is within 5 feet of the opponent and the ally isn't incapacitated.",
+        )
+
+    @classmethod
+    def sunlight_sensitivity(cls) -> PassiveAbility:
+        return cls(
+            "Sunlight Sensitivity",
+            "While in sunlight, this creature has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.",
+        )
+
+    @classmethod
+    def keen_smell(cls) -> PassiveAbility:
+        return cls(
+            "Keen Smell",
+            "This creature has advantage on Wisdom (Perception) checks that rely on smell.",
+        )
+
+
+@dataclass
 class StatBlock:
     name: str
     proficency_bonus: int | None = None
@@ -86,7 +114,7 @@ class StatBlock:
     senses: Collection[str] | None = None
     languages: Collection[str] | None = None
     challenge_rating: str | None = None
-    abilities: Mapping[str, str] | None = None
+    abilities: Collection[PassiveAbility] | None = None
     actions: Collection[Action] | None = None
     # immunities:  # condition or dmg types
     # resistances: # condition or dmg types
@@ -262,8 +290,8 @@ class StatBlock:
         )
         if self.abilities:
             ability_descr = Description()
-            for name, descr in self.abilities.items():
-                ability_descr.add_item(name, descr)
+            for ability in self.abilities:
+                ability_descr.add_item(ability.name, ability.effect)
             card.add(CardSeparator(), ability_descr)
 
         if self.actions:
@@ -603,11 +631,18 @@ class StatBlockBuilder:
             self.stat_block.challenge_rating = cr
         return self
 
-    def add_abilities(self, **abilities: str) -> Self:
+    def add_abilities(self, *args: PassiveAbility, **kwargs: str) -> Self:
         curr_abilities = self.stat_block.abilities
-        if curr_abilities is not None:
-            abilities.update(curr_abilities)
-        self.stat_block.abilities = abilities
+        if curr_abilities:
+            curr_abilities = list(curr_abilities)
+        else:
+            curr_abilities = []
+
+        curr_abilities.extend(args)
+        curr_abilities.extend(
+            PassiveAbility(key, value) for key, value in kwargs.items()
+        )
+        self.stat_block.abilities = tuple(curr_abilities)
         return self
 
     def add_actions(self, *actions: Action) -> Self:
@@ -627,6 +662,15 @@ class StatBlockBuilder:
         category: str | None = None,
     ) -> Self:
         return self.add_actions(Action(name, description, category))
+
+    def apply_racial_traits(
+        self,
+        race: Race,
+    ) -> Self:
+        self.set_size(race.size)
+        self.set_type(race.type)
+        self.set_speed(race.speed)
+        return self
 
     def clone(self) -> StatBlockBuilder:
         return deepcopy(self)

@@ -1,6 +1,6 @@
 from ..arithmetic import DescriptiveInt
 from ..mechanics import Alignment, Size, Skill, speed
-from ..statblock import Action, StatBlock, StatBlockBuilder
+from ..statblock import Action, PassiveAbility, StatBlock, StatBlockBuilder
 
 
 class KoboldBuilder(StatBlockBuilder):
@@ -13,10 +13,7 @@ class KoboldBuilder(StatBlockBuilder):
         self.add_senses("Darkvision 60 ft.")
         self.add_languages("Common", "Draconic")
         self.add_abilities(
-            **{
-                "Sunlight Sensitivity": "While in sunlight, the kobold tracker has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.",
-                "Pack Tactics": "The kobold tracker has advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally isn't incapacitated.",
-            },
+            PassiveAbility.pack_tactics(), PassiveAbility.sunlight_sensitivity()
         )
         self.add_actions(
             Action(

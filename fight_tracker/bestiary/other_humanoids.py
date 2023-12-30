@@ -2,7 +2,15 @@ from ..arithmetic import DescriptiveInt
 from ..dice import Dice, Roll
 from ..mechanics import Skill, race
 from ..mechanics.damage import DamageType
-from ..statblock import Action, StatBlock, StatBlockBuilder
+from ..statblock import Action, PassiveAbility, StatBlock, StatBlockBuilder
+
+
+def apply_race(builder: StatBlockBuilder, creature_race: race.Race | None = None):
+    if creature_race is None:
+        creature_race = race.HUMAN
+
+    builder.apply_racial_traits(creature_race)
+
 
 _thug_builder = (
     StatBlockBuilder("Thug")
@@ -20,9 +28,7 @@ _thug_builder = (
     .set_challenge_rating("1/2")
     .add_skill_proficiencies(Skill.INTIMIDATION)
     .add_abilities(
-        **{
-            "Pack Tactics": "The thug has advantage on an attack roll against a creature if at least one of the his allies is within 5 feet of the creature and the ally isn't incapacitated."
-        }
+        PassiveAbility.pack_tactics(),
     )
     .add_actions(
         Action.multiattack(2, "with his mace"),
@@ -40,12 +46,8 @@ _thug_builder = (
 )
 
 
-def create_thug(creature_race: race.Race | None = None):
-    if creature_race is None:
-        creature_race = race.HUMAN
-
+def create_thug(creature_race: race.Race | None = None) -> StatBlock:
     builder = _thug_builder.clone()
-    builder.set_size(creature_race.size)
-    builder.set_type(creature_race.type)
-    builder.set_speed(creature_race.speed)
+    apply_race(builder, creature_race)
+
     return builder.create()
