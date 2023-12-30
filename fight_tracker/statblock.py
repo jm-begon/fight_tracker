@@ -31,8 +31,9 @@ class Action:
         return cls("Multiattack", desc)
 
     @classmethod
-    def melee_weapon_attack(
+    def melee_attack(
         cls,
+        category: str,
         name: str,
         hit_bonus: int,
         damage: Intable,
@@ -40,7 +41,6 @@ class Action:
         how_many_targets: int | None = None,
         reach: Distance | None = None,
     ) -> Action:
-        # TODO damage string
         damage_type_str = f" {damage_type.value}" if damage_type else ""
         if reach is None:
             reach = Distance(5)
@@ -50,11 +50,52 @@ class Action:
             reach,
             f", {how_many_targets} target(s). Hit {damage}{damage_type_str} damage.",
         ]
-        return cls(name, desc, "Melee Weapon Attack")
+        return cls(name, desc, category)
 
     @classmethod
-    def ranged_weapon_attack(
+    def melee_weapon_attack(
         cls,
+        name: str,
+        hit_bonus: int,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+        reach: Distance | None = None,
+    ) -> Action:
+        return cls.melee_attack(
+            "Melee Weapon Attack",
+            name=name,
+            hit_bonus=hit_bonus,
+            damage=damage,
+            damage_type=damage_type,
+            how_many_targets=how_many_targets,
+            reach=reach,
+        )
+
+    @classmethod
+    def melee_spell_attack(
+        cls,
+        name: str,
+        hit_bonus: int,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+        reach: Distance | None = None,
+    ) -> Action:
+        return cls.melee_attack(
+            "Melee Spell Attack",
+            name=name,
+            hit_bonus=hit_bonus,
+            damage=damage,
+            damage_type=damage_type,
+            how_many_targets=how_many_targets,
+            reach=reach,
+        )
+
+    @classmethod
+    def range_attack(
+        cls,
+        category: str,
         name: str,
         hit_bonus: int,
         range: Range,
@@ -69,7 +110,47 @@ class Action:
             range,
             f", {how_many_targets} target(s). Hit {damage}{damage_type_str} damage.",
         ]
-        return cls(name, desc, "Ranged Weapon Attack")
+        return cls(name, desc, category)
+
+    @classmethod
+    def ranged_weapon_attack(
+        cls,
+        name: str,
+        hit_bonus: int,
+        range: Range,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+    ) -> Action:
+        return cls.range_attack(
+            "Range Weapon Attack",
+            name=name,
+            hit_bonus=hit_bonus,
+            range=range,
+            damage=damage,
+            damage_type=damage_type,
+            how_many_targets=how_many_targets,
+        )
+
+    @classmethod
+    def ranged_spell_attack(
+        cls,
+        name: str,
+        hit_bonus: int,
+        range: Range,
+        damage: Intable,
+        damage_type: DamageType | None = None,
+        how_many_targets: int | None = None,
+    ) -> Action:
+        return cls.range_attack(
+            "Range Spell Attack",
+            name=name,
+            hit_bonus=hit_bonus,
+            range=range,
+            damage=damage,
+            damage_type=damage_type,
+            how_many_targets=how_many_targets,
+        )
 
 
 @dataclass

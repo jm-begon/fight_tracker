@@ -20,3 +20,9 @@ HUMAN = Race(
     Size.MEDIUM,
     Speed(30),
 )
+
+GNOME = Race(
+    "Gnome",
+    Size.SMALL,
+    Speed(25),
+)

@@ -115,16 +115,22 @@ class Range(Distance):
     def __init__(
         self,
         short_range,
-        long_range,
+        long_range: float | None = None,
         unit=Unit.FEET,
     ):
         super().__init__(short_range, unit)
-        self.long_range = Distance(long_range, unit)
+        if long_range is None:
+            self.long_range: Distance | None = None
+        else:
+            self.long_range = Distance(long_range, unit)
 
     def as_unit(self, unit: Unit):
         clone = super().as_unit(unit)
-        clone.long_range = self.long_range.as_unit(unit)
+        if self.long_range:
+            clone.long_range = self.long_range.as_unit(unit)
         return clone
 
     def __str__(self):
+        if self.long_range is None:
+            return super().__str__()
         return f"{self.in_unit}/{self.long_range.in_unit} {self.unit.value}"

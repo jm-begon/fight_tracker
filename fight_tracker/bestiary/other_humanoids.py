@@ -47,6 +47,50 @@ def create_bandit(creature_race: race.Race | None = None) -> StatBlock:
     return builder.create()
 
 
+_wizard_apprentice_builder = (
+    StatBlockBuilder("Wizard apprentice")
+    .set_ability_scores(
+        strength=10,
+        dexterity=10,
+        constitution=10,
+        intelligence=14,
+        wisdom=10,
+        charisma=12,
+    )
+    .set_level(3)
+    .set_armor_class(10)
+    .set_challenge_rating("1/4")
+    .add_skill_proficiencies(Skill.ARCANA, Skill.HISTORY)
+    .add_actions(
+        Action.melee_spell_attack(
+            "Arcane burst",
+            4,
+            Roll.outcome(Dice.expectation(10) + 2),
+            DamageType.FORCE,
+        ),
+        Action.ranged_spell_attack(
+            "Firebolt",
+            4,
+            Range(120),
+            Roll.outcome(Dice.expectation(10) + 2),
+            DamageType.FIRE,
+        ),
+        Action("Shield", "1/day, +5 AC as reaction (until start of next turn)"),
+        Action(
+            "Spill balls",
+            "1 charge, cover an adjacent 10-feet square ground with metal balls. The terrain becomes difficult (or must succeed a DC 12 DEX save).",
+        ),
+    )
+)
+
+
+def create_apprentice_wizard(creature_race: race.Race | None = None) -> StatBlock:
+    builder = _wizard_apprentice_builder.clone()
+    apply_race(builder, creature_race)
+
+    return builder.create()
+
+
 _thug_builder = (
     StatBlockBuilder("Thug")
     .set_ability_scores(
