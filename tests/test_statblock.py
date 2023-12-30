@@ -67,7 +67,7 @@ def test_stream_render() -> None:
 | Small humanoid (kobold), lawful evil                                         |
 | ---------------------------------------------------------------------------- |
 | - Armor Class: 13 (natural armor)                                            |
-| - Hit points: 12 (3d6 + 3)                                                   |
+| - Hit points: 13 (3d6 + 3)                                                   |
 | - Speed: 6.0 sq                                                              |
 | /----------+-----+-----+-----+-----+-----+-----+                             |
 | |          | STR | DEX | CON | INT | WIS | CHA |                             |

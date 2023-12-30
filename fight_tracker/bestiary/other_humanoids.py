@@ -1,6 +1,6 @@
 from ..arithmetic import DescriptiveInt
-from ..dice import Dice
-from ..mechanics import Alignment, Size, Skill, speed
+from ..dice import Dice, Roll
+from ..mechanics import Skill, race
 from ..mechanics.damage import DamageType
 from ..statblock import Action, StatBlock, StatBlockBuilder
 
@@ -27,23 +27,25 @@ _thug_builder = (
     .add_actions(
         Action.multiattack(2, "with his mace"),
         Action.melee_weapon_attack(
-            "Mace", 4, Dice.expectation(6) + 2, DamageType.BLUDGEONING
+            "Mace", 4, Roll.outcome(Dice.expectation(6) + 2), DamageType.BLUDGEONING
         ),
         Action.ranged_weapon_attack(
             "Heavy Crossbow",
             2,
             "100/400 ft",
-            Dice.expectation(10),
+            Roll.outcome(Dice.expectation(10)),
             DamageType.PIERCING,
         ),
     )
 )
 
 
-def create_thug_by_size(size: Size | None = None) -> StatBlock:
-    if size is None:
-        size = Size.MEDIUM
-    # TODO by race instead
+def create_thug(creature_race: race.Race | None = None):
+    if creature_race is None:
+        creature_race = race.HUMAN
+
     builder = _thug_builder.clone()
-    builder.set_size(size)
+    builder.set_size(creature_race.size)
+    builder.set_type(creature_race.type)
+    builder.set_speed(creature_race.speed)
     return builder.create()

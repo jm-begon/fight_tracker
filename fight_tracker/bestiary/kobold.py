@@ -7,7 +7,7 @@ class KoboldBuilder(StatBlockBuilder):
     def __init__(self, creature_name: str) -> None:
         super().__init__(creature_name)
         self.set_size(Size.SMALL)
-        self.set_type("Humanid (Kobold)")
+        self.set_type("Humanoid (Kobold)")
         self.set_alignment(Alignment.LE)
         self.set_speed(30)
         self.add_senses("Darkvision 60 ft.")
