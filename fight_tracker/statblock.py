@@ -308,7 +308,7 @@ class StatBlock:
             for action in self.actions:
                 descr = []
                 if action.category:
-                    descr.append(action.category)
+                    descr.append(f"{action.category}:")
                 descr.append(action.description)
                 action_descr.add_item(action.name, descr)
 
