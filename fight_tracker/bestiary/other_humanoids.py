@@ -12,6 +12,41 @@ def apply_race(builder: StatBlockBuilder, creature_race: race.Race | None = None
     builder.apply_racial_traits(creature_race)
 
 
+_bandit_builder = (
+    StatBlockBuilder("Bandit")
+    .set_ability_scores(
+        strength=11,
+        dexterity=12,
+        constitution=12,
+        intelligence=10,
+        wisdom=10,
+        charisma=10,
+    )
+    .set_level(2)
+    .set_armor_class(12, "leather armor")
+    .set_challenge_rating("1/8")
+    .add_actions(
+        Action.melee_weapon_attack(
+            "Scimitar", 3, Roll.outcome(Dice.expectation(6) + 1), DamageType.SLASHING
+        ),
+        Action.ranged_weapon_attack(
+            "Light Crossbow",
+            3,
+            Range(80, 320),
+            Roll.outcome(Dice.expectation(8) + 1),
+            DamageType.PIERCING,
+        ),
+    )
+)
+
+
+def create_bandit(creature_race: race.Race | None = None) -> StatBlock:
+    builder = _bandit_builder.clone()
+    apply_race(builder, creature_race)
+
+    return builder.create()
+
+
 _thug_builder = (
     StatBlockBuilder("Thug")
     .set_ability_scores(
