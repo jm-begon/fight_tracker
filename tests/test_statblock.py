@@ -88,7 +88,7 @@ def test_stream_render() -> None:
 | | Modifier | -2  | +2  | -1  | -1  | -2  | -1  |                             |
 | | Save     | -2  | +2  | -1  | -1  | +0  | -1  |                             |
 | +----------+-----+-----+-----+-----+-----+-----/                             |
-| - Proficiency bonus: 2                                                       |
+| - Proficiency bonus: +2                                                      |
 | - Senses: Darkvision 12 sq / Passive perception 12                           |
 | - Languages: Common, Draconic                                                |
 | - Challenge rating: 1/2                                                      |
@@ -142,7 +142,7 @@ def test_stream_render_small() -> None:
 | | Modifier | -   | -   | -   | -   | -   | -   |                             |
 | | Save     | -   | -   | -   | -   | -   | -   |                             |
 | +----------+-----+-----+-----+-----+-----+-----/                             |
-| - Proficiency bonus: 0                                                       |
+| - Proficiency bonus: +0                                                      |
 +------------------------------------------------------------------------------/
 """
     given = sr.strip_formating(buffer.getvalue())
