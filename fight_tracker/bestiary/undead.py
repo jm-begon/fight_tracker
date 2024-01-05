@@ -103,9 +103,10 @@ _zombie_Edric_Steadyhand_builder = (
             "Necrotic release": (
                 "When Edric Steadyhand dies, the Necrotic Echo which animates "
                 "it jumps to the closest creature. The latter takes 12 (4d6) "
-                "points of necrotic damage. If it is brought down to zero HP, "
-                "it awakens a few minutes later with 1 HP, being the new host "
-                " of the Necrotic Echo"
+                "points of necrotic damage, or half as much on a successful "
+                "wisdom save (DC 12). If the target is brought down to zero "
+                "HP, it awakens a few minutes later with 1 HP, being the new "
+                "host of the Necrotic Echo"
             )
         }
     )
@@ -118,7 +119,7 @@ _zombie_Edric_Steadyhand_builder = (
             additional_info=(
                 "On a successful hit, the spring activate, throwing "
                 "the target 5 feet away on a failed DC 15 Strength (Athletics) "
-                "(charges: 2)"
+                "(charges: 2, comes back on a short rest)"
             ),
         ),
         Action(
