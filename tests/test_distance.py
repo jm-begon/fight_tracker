@@ -21,7 +21,7 @@ def test_speed() -> None:
     s2 = s.as_unit(Unit.SQUARES)
     assert s2.in_unit == pytest.approx(6.0)
     assert s2.feet == pytest.approx(30)
-    assert str(s2) == "6.0 sq"
+    assert str(s2) == "6 sq"
 
 
 def test_multispeed() -> None:
@@ -37,4 +37,4 @@ def test_multispeed() -> None:
 def test_range() -> None:
     r = Range(100, 400)
     assert str(r) == "100/400 ft"
-    assert str(r.as_unit(Unit.SQUARES)) == "20.0/80.0 sq"
+    assert str(r.as_unit(Unit.SQUARES)) == "20/80 sq"

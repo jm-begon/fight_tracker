@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Collection, Dict, Self, cast
+from typing import Any, Collection, Dict, List, Self, Sequence, cast
 
 from .arithmetic import DescriptiveInt
 from .dice import Dice, Roll
@@ -10,6 +10,7 @@ from .mechanics.ability import Ability, AbilityScore, SavingThrow, Skill
 from .mechanics.damage import DamageType
 from .mechanics.misc import Alignment, Size
 from .mechanics.race import Race
+from .mechanics.sense import Sense
 from .mechanics.speed import Distance, Range, Speed, Unit
 from .rendering.card import Card, CardSeparator, Description
 from .rendering.table import BoolCell, Table
@@ -40,6 +41,7 @@ class Action:
         damage_type: DamageType | None = None,
         how_many_targets: int | None = None,
         reach: Distance | None = None,
+        additional_info: str | None = None,
     ) -> Action:
         damage_type_str = f" {damage_type.value}" if damage_type else ""
         if reach is None:
@@ -49,6 +51,7 @@ class Action:
             f"{hit_bonus:+d} to hit, reach",
             reach,
             f", {how_many_targets} target(s). Hit {damage}{damage_type_str} damage.",
+            "" if additional_info is None else f" {additional_info.capitalize()}",
         ]
         return cls(name, desc, category)
 
@@ -61,6 +64,7 @@ class Action:
         damage_type: DamageType | None = None,
         how_many_targets: int | None = None,
         reach: Distance | None = None,
+        additional_info: str | None = None,
     ) -> Action:
         return cls.melee_attack(
             "Melee Weapon Attack",
@@ -70,6 +74,7 @@ class Action:
             damage_type=damage_type,
             how_many_targets=how_many_targets,
             reach=reach,
+            additional_info=additional_info,
         )
 
     @classmethod
@@ -81,6 +86,7 @@ class Action:
         damage_type: DamageType | None = None,
         how_many_targets: int | None = None,
         reach: Distance | None = None,
+        additional_info: str | None = None,
     ) -> Action:
         return cls.melee_attack(
             "Melee Spell Attack",
@@ -90,6 +96,7 @@ class Action:
             damage_type=damage_type,
             how_many_targets=how_many_targets,
             reach=reach,
+            additional_info=additional_info,
         )
 
     @classmethod
@@ -102,6 +109,7 @@ class Action:
         damage: Intable,
         damage_type: DamageType | None = None,
         how_many_targets: int | None = None,
+        additional_info: str | None = None,
     ) -> Action:
         damage_type_str = f" {damage_type.value}" if damage_type else ""
         how_many_targets = 1 if how_many_targets is None else how_many_targets
@@ -109,6 +117,7 @@ class Action:
             f"{hit_bonus:+d} to hit, range",
             range,
             f", {how_many_targets} target(s). Hit {damage}{damage_type_str} damage.",
+            "" if additional_info is None else f" {additional_info.capitalize()}",
         ]
         return cls(name, desc, category)
 
@@ -121,6 +130,7 @@ class Action:
         damage: Intable,
         damage_type: DamageType | None = None,
         how_many_targets: int | None = None,
+        additional_info: str | None = None,
     ) -> Action:
         return cls.range_attack(
             "Range Weapon Attack",
@@ -130,6 +140,7 @@ class Action:
             damage=damage,
             damage_type=damage_type,
             how_many_targets=how_many_targets,
+            additional_info=additional_info,
         )
 
     @classmethod
@@ -141,6 +152,7 @@ class Action:
         damage: Intable,
         damage_type: DamageType | None = None,
         how_many_targets: int | None = None,
+        additional_info: str | None = None,
     ) -> Action:
         return cls.range_attack(
             "Range Spell Attack",
@@ -150,6 +162,7 @@ class Action:
             damage=damage,
             damage_type=damage_type,
             how_many_targets=how_many_targets,
+            additional_info=additional_info,
         )
 
 
@@ -201,7 +214,7 @@ class StatBlock:
     initiative_bonus: int | None = None
     passive_perception: int | None = None
     # TODO # https://www.dndbeyond.com/sources/basic-rules/monsters#Senses
-    senses: Collection[str] | None = None
+    senses: Collection[Sense] | None = None
     languages: Collection[str] | None = None
     challenge_rating: str | None = None
     abilities: Collection[PassiveAbility] | None = None
@@ -335,6 +348,18 @@ class StatBlock:
         ans = {ability: self.get_saving_throw(ability) for ability in Ability}
         return {k: v for k, v in ans.items() if v is not None}
 
+    def get_skill_score(self, skill: Skill) -> Intable | None:
+        score = self.get_ability_score(skill.value)
+        if (
+            score
+            and self.proficency_bonus
+            and self.skill_proficiencies
+            and skill in self.skill_proficiencies
+        ):
+            score = score + self.proficency_bonus
+
+        return score
+
     def __render__(self):
         card = Card(self.name)
 
@@ -363,13 +388,40 @@ class StatBlock:
 
         ability_table = self._get_ability_table()
 
+        if self.senses:
+            sense_list = list(self.senses)
+        else:
+            sense_list = []
+        if self.passive_perception:
+            sense_list.append(f"Passive perception {self.passive_perception}")
+        if len(sense_list) > 0:
+            sense_list = self.add_separator(sense_list)
+        else:
+            sense_list = None  # remove line
+
+        skills_prof: List | None = []
+        if self.skill_proficiencies:
+            for skill in self.skill_proficiencies:
+                score = self.get_skill_score(skill)
+                if score is None:
+                    # cannot be deduced
+                    continue
+                skills_prof.append(f"{skill.name.capitalize()} {int(score):+d}")
+
+        if len(skills_prof) == 0:
+            skills_prof = None
+        else:
+            skills_prof = self.add_separator(skills_prof)
+
         card.add(
             ability_table,
-            Description().add_item("Proficiency bonus", self.proficency_bonus)
+            Description()
+            .add_item("Proficiency bonus", f"{self.proficency_bonus:+d}")
+            .add_item("Skill", skills_prof)
             # TODO Damage resistances
             # TODO Damage immunities
             # TODO Condition immunities
-            .add_item("Sense", list(self.senses) if self.senses is not None else None)
+            .add_item("Senses", sense_list)
             .add_item(
                 "Languages",
                 ", ".join(str(lg) for lg in self.languages)
@@ -444,6 +496,14 @@ class StatBlock:
 
         return table
 
+    def add_separator(self, ls: Sequence, sep: str = "/") -> List:
+        if len(ls) < 2:
+            return list(ls)
+        res: List[Any] = [None] * (2 * len(ls) - 1)
+        res[::2] = ls
+        res[1::2] = [sep] * (len(ls) - 1)
+        return res
+
 
 @dataclass
 class InferredInt:
@@ -461,6 +521,11 @@ class StatBlockBuilder:
         )
         self.level: int | None = None
         self._hit_dice: Dice | None = None
+
+    def override_name(self, name: str | None) -> Self:
+        if name:
+            self.stat_block.name = name
+        return self
 
     def set_proficiency_bonus(self, proficiency_bonus: int | None) -> Self:
         if proficiency_bonus:
@@ -697,7 +762,7 @@ class StatBlockBuilder:
             self.level = level
         return self
 
-    def add_senses(self, *senses: str) -> Self:
+    def add_senses(self, *senses: Sense) -> Self:
         if self.stat_block.senses:
             curr_senses = list(self.stat_block.senses)
         else:

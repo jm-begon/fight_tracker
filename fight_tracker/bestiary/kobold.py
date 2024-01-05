@@ -1,5 +1,5 @@
 from ..arithmetic import DescriptiveInt
-from ..mechanics import Alignment, Size, Skill, speed
+from ..mechanics import Alignment, Darkvision, Size, Skill, speed
 from ..statblock import Action, PassiveAbility, StatBlock, StatBlockBuilder
 
 
@@ -10,7 +10,7 @@ class KoboldBuilder(StatBlockBuilder):
         self.set_type("Humanoid (Kobold)")
         self.set_alignment(Alignment.LE)
         self.set_speed(30)
-        self.add_senses("Darkvision 60 ft.")
+        self.add_senses(Darkvision(60))
         self.add_languages("Common", "Draconic")
         self.add_abilities(
             PassiveAbility.pack_tactics(), PassiveAbility.sunlight_sensitivity()

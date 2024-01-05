@@ -100,6 +100,16 @@ class Roll(BaseIntable):
         int(__o)
         return __o
 
+    @classmethod
+    def expected_outcome(
+        cls, n_sided_dice: int, *others: Intable, n_dices: int = 1
+    ) -> Roll:
+        ans = n_dices * Dice.expectation(n_sided_dice)
+        for __o in others:
+            ans = ans + __o
+
+        return cls.outcome(ans)
+
     def __init__(self, decorated):
         self.decorated = decorated
         self.value = None

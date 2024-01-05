@@ -5,6 +5,7 @@ from fight_tracker.arithmetic import DescriptiveInt
 from fight_tracker.dice import Dice, Roll
 from fight_tracker.mechanics.ability import Ability
 from fight_tracker.mechanics.misc import Alignment, Size
+from fight_tracker.mechanics.sense import Darkvision
 from fight_tracker.mechanics.speed import Speed
 from fight_tracker.rendering import StreamRenderer
 from fight_tracker.statblock import Action, PassiveAbility, StatBlock, StatBlockBuilder
@@ -32,7 +33,7 @@ def test_stream_render() -> None:
         saving_throw_proficiencies=(Ability.WIS,),
         skill_proficiencies=None,  # TODO
         passive_perception=12,
-        senses=("Darkvision 60ft",),
+        senses=(Darkvision(60),),
         languages=("Common", "Draconic"),
         challenge_rating="1/2",
         abilities=[
@@ -80,15 +81,15 @@ def test_stream_render() -> None:
 | ---------------------------------------------------------------------------- |
 | - Armor Class: 13 (natural armor)                                            |
 | - Hit points: 13 (3d6 + 3)                                                   |
-| - Speed: 6.0 sq                                                              |
+| - Speed: 6 sq                                                                |
 | /----------+-----+-----+-----+-----+-----+-----+                             |
 | |          | STR | DEX | CON | INT | WIS | CHA |                             |
 | +----------+-----+-----+-----+-----+-----+-----+                             |
 | | Modifier | -2  | +2  | -1  | -1  | -2  | -1  |                             |
 | | Save     | -2  | +2  | -1  | -1  | +0  | -1  |                             |
 | +----------+-----+-----+-----+-----+-----+-----/                             |
-| - Proficiency bonus: 2                                                       |
-| - Sense: Darkvision 60ft                                                     |
+| - Proficiency bonus: +2                                                      |
+| - Senses: Darkvision 12 sq / Passive perception 12                           |
 | - Languages: Common, Draconic                                                |
 | - Challenge rating: 1/2                                                      |
 | ---------------------------------------------------------------------------- |
@@ -141,7 +142,7 @@ def test_stream_render_small() -> None:
 | | Modifier | -   | -   | -   | -   | -   | -   |                             |
 | | Save     | -   | -   | -   | -   | -   | -   |                             |
 | +----------+-----+-----+-----+-----+-----+-----/                             |
-| - Proficiency bonus: 0                                                       |
+| - Proficiency bonus: +0                                                      |
 +------------------------------------------------------------------------------/
 """
     given = sr.strip_formating(buffer.getvalue())

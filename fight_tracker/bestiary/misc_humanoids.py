@@ -1,4 +1,3 @@
-from ..arithmetic import DescriptiveInt
 from ..dice import Dice, Roll
 from ..mechanics import Range, Skill, race
 from ..mechanics.damage import DamageType
